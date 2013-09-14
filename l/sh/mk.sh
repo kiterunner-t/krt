@@ -121,21 +121,7 @@ mk_simware() {
   test "$_product" = "simware_64" && _arch="x86_64"
 
   mk_exe $_log $_log_err <<EOF
-0 0 cd $_PWD/make/
-1 1 ./make_user_onearch.sh $_product $_arch $_dev $_version
-
-2 0 ./make_kernel.sh $_support $_product $_dev $_version
-0 0 cd ../target/kernel_lib/
-2 0 ./make_plat.sh $_version $_product $_dev
-0 0 cd ../../product/$_product/$_dev/prj/
-2 2 ./build_product.sh
-0 0 cd ../../../../make/
-2 2 ./make_ko.sh $_product $_dev $_version
-
-0 0 cd ../product/$_product/$_dev/prj/
-0 2 ./mkelf.sh
-
-0 2 cp ./${_version}/simware_*.img $
+0 2 # some compile commands ...
 EOF
 }
 
