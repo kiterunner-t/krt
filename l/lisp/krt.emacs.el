@@ -55,7 +55,7 @@
 
 
 ;; evernote-mode
-;; (setq evernote-developer-token "S=s144:U=f22fdf:E=1482ca4f3aa:C=140d4f3c7ae:P=1cd:A=en-devtoken:V=2:H=1d98ce01a94fc35928e5d4ccd8cd78ee")
+;; (setq evernote-developer-token "...")
 ;; (setq evernote-enml-formatter-command '("w3m" "-dump" "-I" "UTF8" "-O" "UTF8"))
 ;; (require 'evernote-mode)
 ;; (global-set-key "\C-cec" 'evernote-create-note)
