@@ -14,7 +14,6 @@
 #define FALSE 0
 
 
-
 #define error(msg) \
   do { \
     fprintf(stderr, "error in %d line of [%s]: %s\n", __LINE__, __FILE__, msg); \
