@@ -5,6 +5,9 @@ BINDIR   = ../bin
 ALL_OBJS = bh sort rb dsl
 
 
+all: $(ALL_OBJS)
+
+
 bh: test_binary_heap.c binary_heap.c
 	$(CC) $(CC_FLAGS) -o $(BINDIR)/$@ $^
 	$(BINDIR)/$@

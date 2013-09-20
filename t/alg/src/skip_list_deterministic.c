@@ -8,6 +8,14 @@
 #include "skip_list_deterministic.h"
 
 
+#define DSKIP_NODE_SET(node, e, r, d)  \
+  do {                                 \
+    (node)->item = e;                  \
+    (node)->right = r;                 \
+    (node)->down = d;                  \
+  } while (0)
+
+
 typedef struct dskip_list_s dskip_list_t;
 typedef struct dskip_list_node_s dskip_list_node_t;
 
@@ -55,15 +63,9 @@ dskip_list_init(item_op_t *op, void *max)
   }
 
   t = b + 1;
-  h->right = t;
-  h->down = b;
-  h->item = max;
-  t->right = t;
-  t->down = NULL;
-  t->item = max;
-  b->right = b;
-  b->down = b;
-  b->item = 0;
+  DSKIP_NODE_SET(h, max, t, b);
+  DSKIP_NODE_SET(t, max, t, NULL);
+  DSKIP_NODE_SET(b, 0, b, b);
 
   dsl->head = h;
   dsl->tail = t;
@@ -79,17 +81,17 @@ dskip_list_init(item_op_t *op, void *max)
 void
 dskip_list_destroy(dskip_list_t *dsl)
 {
-  dskip_list_node_t *level;
   dskip_list_node_t *current;
 
   if (dsl == NULL)
     return ;
 
   if (dsl->op->free != NULL) {
-    for (level = dsl->head; level != dsl->bottom; level = level->down) {
-      for (current = level; current != dsl->tail; current = current->right) 
-        (dsl->op->free)(current->item);
-    }
+    for (current = dsl->head; current->down != dsl->bottom; current = current->down)
+      ;
+
+    for ( ; current != dsl->tail; current = current->right) 
+      (dsl->op->free)(current->item);
   }
 
   free(dsl->bottom);
@@ -133,9 +135,7 @@ _dskip_list_node_new(void *item, dskip_list_node_t *r, dskip_list_node_t *d)
   if (t == NULL)
     return NULL;
 
-  t->item = item;
-  t->right = r;
-  t->down = d;
+  DSKIP_NODE_SET(t, item, r, d);
   return t;
 }
 

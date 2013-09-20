@@ -22,7 +22,7 @@ item_op_t string_op = {
 
 struct string_s {
   unsigned char *str;
-  size_t         len;
+  long           len;
 };
 
 
@@ -48,6 +48,8 @@ string_cmp(void *item1, void *item2)
   string_t *s2 = (string_t *) item2;
   size_t    n;
 
+  if (s1->len==STRING_INVALID_LEN && s2->len==STRING_INVALID_LEN)
+    return 0;
   if (s1->len == STRING_INVALID_LEN)
     return 1;
   if (s2->len == STRING_INVALID_LEN)
@@ -61,7 +63,10 @@ string_cmp(void *item1, void *item2)
 static inline void
 string_print(void *item)
 {
-  printf("%s", ((string_t *) item)->str);
+  string_t      *s = (string_t *) item;
+  unsigned char *t = "<0>";
+
+  printf("%s", (s->len > 0) ? s->str : t);
 }
 
 
