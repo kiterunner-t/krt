@@ -1,6 +1,7 @@
 #! /bin/bash
 # Copyleft (C) KRT, 2013 by kiterunner_t
 
+# for bash 4.2 in my debian system
 # set -x
 
 _EXT_FILENAMES=$(cat <<-EOF
@@ -9,8 +10,10 @@ _EXT_FILENAMES=$(cat <<-EOF
   pl
   erl
   [c|h]
-  java
+  gdb
   lua
+  py
+  java
   el
   tcl
 EOF

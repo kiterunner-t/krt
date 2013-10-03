@@ -14,11 +14,6 @@ sub gbk_to_utf8($);
 sub custom_order($$);
 
 
-#binmode STDIN, ":encoding(utf8)";
-#binmode STDOUT, ":encoding(utf8)";
-#binmode STDERR, ":encoding(utf8)";
-
-
 # perl order.pl file1 file2 ... > result.csv
 die "Usage: perl order.pl <files> ..." if $#ARGV < 0;
 
