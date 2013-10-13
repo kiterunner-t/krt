@@ -89,6 +89,7 @@ redblack_tree_init(item_op_t *op, void *max)
   rb->root = root;
   rb->op = op;
   rb->rotate_count = 0;
+  return rb;
 }
 
 
@@ -455,6 +456,7 @@ static redblack_node_t *
 _r_redblack_insert(redblack_tree_t *rb, redblack_node_t *h, void *item, int sw)
 {
   printf("not support\n");
+  return NULL;
 }
 
 

@@ -56,17 +56,15 @@ string_cmp(void *item1, void *item2)
     return -1;
 
   n = (s1->len > s2->len) ? s2->len : s1->len;
-  return (long) strncmp(s1->str, s2->str, n);
+  return (long) strncmp((char *) s1->str, (char *) s2->str, n);
 }
 
 
 static inline void
 string_print(void *item)
 {
-  string_t      *s = (string_t *) item;
-  unsigned char *t = "<0>";
-
-  printf("%s", (s->len > 0) ? s->str : t);
+  string_t *s = (string_t *) item;
+  printf("%s", (s->len > 0) ? ((char *) (s->str)) : "<0>");
 }
 
 

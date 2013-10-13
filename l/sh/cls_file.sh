@@ -156,7 +156,7 @@ EOF
 )
 
     #  _WEBLOGIC_PID=$(ps -u weblogic -o pid,ppid,args |
-    #                    grep "Dweblogic.Name=AdminServer.*weblogic.Server$" |
+    #                    grep -e "-Dweblogic.Name=AdminServer.*weblogic.Server$" |
     #                      awk '{ print $2 }')
     #  _WEBLOGIC_LOGFILE="weblogic.${_WEBLOGIC_PID}.log"
     #  _WEBLOGIC_GCFILE="gc.${_WEBLOGIC_PID}.log"

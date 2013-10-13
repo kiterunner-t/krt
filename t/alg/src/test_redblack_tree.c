@@ -46,7 +46,7 @@ test_long()
   }
 
   redblack_tree_print(rb);
-  printf("the size of the redblack tree is %d, rotate count is %d\n", 
+  printf("the size of the redblack tree is %lu, rotate count is %lu\n", 
          redblack_tree_size(rb), redblack_tree_rotate_count(rb));
 
   printf("delete nonexist item: 100\n");
@@ -69,7 +69,7 @@ test_string()
   redblack_tree_t *rb;
   string_t        *s;
   int              i;
-  unsigned char   *sa[] = {
+  char            *sa[] = {
     "hello",
     "world",
     "hj",
@@ -91,7 +91,7 @@ test_string()
     error("init redblack tree error");
 
   for (i = 0; sa[i] != NULL; i++) {
-    s = string_new(sa[i], strlen(sa[i]));
+    s = string_new((unsigned char *) sa[i], strlen(sa[i]));
     if (s == NULL)
       error("malloc string_t error");
 
@@ -99,7 +99,7 @@ test_string()
       error("redblack insert error");
   }
 
-  printf("the size of the redblack tree is %d, rotate count is %d\n", 
+  printf("the size of the redblack tree is %lu, rotate count is %lu\n", 
          redblack_tree_size(rb), redblack_tree_rotate_count(rb));
 
   redblack_tree_delete(rb, (void *) s);
