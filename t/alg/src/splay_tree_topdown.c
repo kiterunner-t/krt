@@ -3,6 +3,7 @@
  */
 
 #include <stdlib.h>
+#include <assert.h>
 #include "misc.h"
 #include "item.h"
 #include "splay_tree.h"
@@ -192,10 +193,9 @@ _splay_tree_splay(splay_tree_t *splay, splay_node_t *root, void *item)
 
   for ( ; ; ) {
     n = cmp(item, t->item);
-    if (n == 0) {
-      break;
+    assert(n != 0);
 
-    } else if (n > 0) {
+    if (n > 0) {
       if (t->right == dummy)
         break;
 
