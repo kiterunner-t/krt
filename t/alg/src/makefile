@@ -2,8 +2,8 @@ CC       = gcc
 CC_FLAGS = -Wall -g -I../../../lib/include -I../include
 BINDIR   = ../bin
 
-ALL_OBJS = rb dsl avl bh sort
-ITEM_SRC = item_long.c item_long.h item_string.c item_string.h
+ALL_OBJS = rb dsl test_splay_tree
+ITEM_SRC = item_long.c item_string.c
 
 %.o : %.c
 	$(CC) $(CC_FLAGS) $<
@@ -12,19 +12,19 @@ ITEM_SRC = item_long.c item_long.h item_string.c item_string.h
 all: $(ALL_OBJS)
 
 
-rb: test_redblack_tree.c redblack_tree.c redblack_tree.h $(ITEM_SRC)
+rb: test_redblack_tree.c redblack_tree.c $(ITEM_SRC)
 	$(CC) $(CC_FLAGS) -o $(BINDIR)/$@ $^
 
 
-dsl: test_skip_list_deterministic.c skip_list_deterministic.c item_long.c item_string.c
+dsl: test_skip_list_deterministic.c skip_list_deterministic.c $(ITEM_SRC)
 	$(CC) $(CC_FLAGS) -o $(BINDIR)/$@ $^
 
 
-test_splay_tree: test_splay_tree.c splay_tree_topdown.c item_long.c item_string.c
+test_splay_tree: test_splay_tree.c splay_tree_topdown.c $(ITEM_SRC)
 	$(CC) $(CC_FLAGS) -o $(BINDIR)/$@ $^
 
 
-avl: test_avl_tree.c avl_tree.c avl_tree.h item_long.c item_string.c
+avl: test_avl_tree.c avl_tree.c avl_tree.h $(ITEM_SRC)
 	$(CC) $(CC_FLAGS) -o $(BINDIR)/$@ $^
 
 

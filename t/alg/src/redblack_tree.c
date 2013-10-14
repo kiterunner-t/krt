@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
-#include "misc.h"
+#include "kmisc.h"
 #include "item.h"
 #include "redblack_tree.h"
 

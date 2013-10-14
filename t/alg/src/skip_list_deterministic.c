@@ -103,7 +103,7 @@ int
 dskip_list_find(dskip_list_t *dsl, void *item, void **result)
 {
   dskip_list_node_t *current;
-  item_cmp_pt        cmp;
+  item_cmp_pt        cmp = dsl->op->cmp;
   long               n;
 
   if (cmp(item, dsl->max) == 0)

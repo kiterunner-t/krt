@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <limits.h>
-#include "misc.h"
+#include "kmisc.h"
 #include "redblack_tree.h"
 #include "item_long.h"
 #include "item_string.h"
@@ -38,11 +38,11 @@ test_long()
 
   rb = redblack_tree_init(&int_op, (void *) LONG_MAX);
   if (rb == NULL) 
-    error("init redblack tree error");
+    kerror("init redblack tree error");
 
   for (i = 0; i < sizeof(a) / sizeof(long); ++i) {
     if (redblack_tree_insert(rb, (void *) a[i]) != 0)
-      error("redblack tree insert error");
+      kerror("redblack tree insert error");
   }
 
   redblack_tree_print(rb);
@@ -84,19 +84,19 @@ test_string()
 
   s = string_new(0, STRING_INVALID_LEN);
   if (s == NULL)
-    error("string new error");
+    kerror("string new error");
 
   rb = redblack_tree_init(&string_op, s);
   if (rb == NULL) 
-    error("init redblack tree error");
+    kerror("init redblack tree error");
 
   for (i = 0; sa[i] != NULL; i++) {
     s = string_new((unsigned char *) sa[i], strlen(sa[i]));
     if (s == NULL)
-      error("malloc string_t error");
+      kerror("malloc string_t error");
 
     if (redblack_tree_insert(rb, (void *) s) != 0)
-      error("redblack insert error");
+      kerror("redblack insert error");
   }
 
   printf("the size of the redblack tree is %lu, rotate count is %lu\n", 

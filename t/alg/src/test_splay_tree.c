@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "misc.h"
+#include "kmisc.h"
 #include "item.h"
 #include "item_long.h"
 #include "item_string.h"
@@ -39,15 +39,18 @@ test_long(void)
 
   splay = splay_tree_init(&int_op);
   if (splay == NULL)
-    error("init splay tree error");
+    kerror("init splay tree error");
 
   for (i = 0; i < sizeof(a)/sizeof(long); ++i) {
     n = splay_tree_insert(splay, (void *) a[i]);
-    if (n == -1)
-      error("splay tree insert error");
-    else if (n == 1)
+    if (n == KEEXIST)
       printf("[NOTICE] insert duplicate key\n");
+    else if (n != KSUCCESS)
+      kerror("splay tree insert error");
   }
+
+  if (splay_tree_delete(splay, (void *) 30) != KSUCCESS)
+    printf("splay tree delete error in 30\n");
 
   splay_tree_print(splay);
   splay_tree_destroy(splay);
@@ -76,18 +79,18 @@ test_string(void)
 
   splay = splay_tree_init(&string_op);
   if (splay == NULL)
-    error("init splay tree error");
+    kerror("init splay tree error");
 
   for (i = 0; sa[i] != NULL; ++i) {
     s = string_new((unsigned char *) sa[i], strlen(sa[i]));
     if (s == NULL)
-      error("malloc string_t error");
+      kerror("malloc string_t error");
 
     n = splay_tree_insert(splay, (void *) s);
-    if (n == -1)
-      error("splay tree insert error");
-    else if (n == 1)
+    if (n == KEEXIST)
       printf("[NOTICE] insert duplicate key\n");
+    else if (n != KSUCCESS)
+      kerror("splay tree insert [%s] error", sa[i]);
   }
 
   splay_tree_print(splay);

@@ -8,17 +8,17 @@
 #include <stdarg.h>
 #include <errno.h>
 #include <syslog.h>
-#include "log.h"
+#include "klog.h"
 
-#define LOG_MAXLINE  2048
+#define KLOG_MAXLINE  2047
 
 static int g_is_daemon;
 
 static void _log(int flag, int level, const char *fmt, va_list ap);
 
 
-inline void
-log_init(int d, const char *proc_name)
+void
+klog_init(int d, const char *proc_name)
 {
   g_is_daemon = d;
 
@@ -27,7 +27,7 @@ log_init(int d, const char *proc_name)
 }
 
 
-inline void
+void
 log_exit()
 {
   if (g_is_daemon)
@@ -35,8 +35,8 @@ log_exit()
 }
 
 
-inline void
-log4(int level, const char *fmt, ...)
+void
+klog_(int level, const char *fmt, ...)
 {
   va_list ap;
   int     is_errno = 0;
@@ -66,9 +66,9 @@ log4(int level, const char *fmt, ...)
 static void
 _log(int errnoflag, int level, const char *fmt, va_list ap)
 {
-  int  errno_save;
-  int  len;
-  char buf[LOG_MAXLINE+1];
+  int    errno_save;
+  size_t len;
+  char   buf[KLOG_MAXLINE+1];
 
   errno_save = errno;
   vsnprintf(buf, sizeof(buf) - 1, fmt, ap);
@@ -76,8 +76,7 @@ _log(int errnoflag, int level, const char *fmt, va_list ap)
   len = strlen(buf);
   if (errnoflag)
     snprintf(buf + len, sizeof(buf) - len, ": %s", strerror(errno_save));
-  strcat(buf, "\n");
-  
+
   if (g_is_daemon) {
     syslog(level, buf);
     return ;

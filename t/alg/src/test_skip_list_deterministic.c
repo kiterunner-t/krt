@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <limits.h>
-#include "misc.h"
+#include "kmisc.h"
 #include "skip_list_deterministic.h"
 #include "item.h"
 #include "item_long.h"
@@ -36,18 +36,18 @@ test_dskip_long()
 
   dsl = dskip_list_init(&int_op, (void *) LONG_MAX);
   if (dsl == NULL)
-    error("init dskip list error");
+    kerror("init dskip list error");
 
   for (i = 0; i < sizeof(a)/sizeof(long); ++i) {
     if (dskip_list_insert(dsl, (void *) a[i]) == -1)
-      error("dskip list inert error");
+      kerror("dskip list inert error");
 
     if (dskip_list_find(dsl, (void *) a[i], &t))
-      error("skip find error");
+      kerror("skip find error");
   }
 
   if (dskip_list_insert(dsl, (void *) 5) != 1)
-    error("dskip list insert duplicate key error");
+    kerror("dskip list insert duplicate key error");
 
   dskip_list_print(dsl);
   dskip_list_destroy(dsl);
@@ -60,7 +60,7 @@ test_dskip_string()
   dskip_list_t  *dsl;
   string_t      *s;
   int            i;
-  unsigned char *sa[] = {
+  char          *sa[] = {
     "hello",
     "world",
     "hj",
@@ -74,25 +74,25 @@ test_dskip_string()
 
   s = string_new(0, STRING_INVALID_LEN);
   if (s == NULL)
-    error("string new error");
+    kerror("string new error");
 
   dsl = dskip_list_init(&string_op, s);
   if (dsl == NULL)
-    error("init dskip list error");
+    kerror("init dskip list error");
 
   for (i = 0; sa[i] != NULL; i++) {
-    s = string_new(sa[i], strlen(sa[i]));
+    s = string_new((unsigned char *) sa[i], strlen(sa[i]));
     if (s == NULL)
-      error("malloc string_t error");
+      kerror("malloc string_t error");
 
     if (dskip_list_insert(dsl, (void *) s) == -1)
-      error("dskip_list insert error");
+      kerror("dskip_list insert error");
   }
 
   if (dskip_list_insert(dsl, (void *) s) == 1)
     printf("insert duplicate key\n");
   else
-    error("error in insert duplicate key");
+    kerror("error in insert duplicate key");
 
   dskip_list_print(dsl);
   dskip_list_destroy(dsl);
