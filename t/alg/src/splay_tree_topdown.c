@@ -150,7 +150,7 @@ splay_tree_delete(splay_tree_t *splay, void *item)
 
   if (root->left == dummy) {
     splay->root = root->right;
-   
+
   } else if (root->right == dummy) {
     splay->root = root->left;
 
@@ -268,7 +268,7 @@ _splay_tree_splay(splay_tree_t *splay, splay_node_t *root, void *item)
 
       n = cmp(item, t->right->item);
       if (n==0 || (n>0 && t->right->right==dummy) 
-          || (n<0 && t->right->left==dummy)) {  // zig
+          || (n<0 && t->right->left==dummy)) {   // zig
         left_max->right = t;
         left_max = t;
         t = t->right;
