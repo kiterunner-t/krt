@@ -2,7 +2,7 @@ CC       = gcc
 CC_FLAGS = -Wall -g -I../../../lib/include -I../include
 BINDIR   = ../bin
 
-ALL_OBJS = rb dsl test_splay_tree
+ALL_OBJS = rb dsl test_splay_tree test_aa_tree
 ITEM_SRC = item_long.c item_string.c
 
 %.o : %.c
@@ -21,6 +21,10 @@ dsl: test_skip_list_deterministic.c skip_list_deterministic.c $(ITEM_SRC)
 
 
 test_splay_tree: test_splay_tree.c splay_tree_topdown.c $(ITEM_SRC)
+	$(CC) $(CC_FLAGS) -o $(BINDIR)/$@ $^
+
+
+test_aa_tree: test_aa_tree.c aa_tree.c $(ITEM_SRC)
 	$(CC) $(CC_FLAGS) -o $(BINDIR)/$@ $^
 
 
