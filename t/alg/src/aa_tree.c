@@ -34,6 +34,7 @@ static aa_node_t *_aa_tree_new_node(void *item, aa_node_t *l, aa_node_t *r);
 static void _aa_tree_destroy(aa_tree_t *aa, aa_node_t *root);
 static void _r_aa_tree_print(const aa_tree_t *aa, const aa_node_t *root);
 static errno_t _r_aa_tree_insert(aa_tree_t *aa, aa_node_t **root, void *item);
+static errno_t _r_aa_tree_delete(aa_tree_t *aa, aa_node_t **root, void *item);
 
 
 aa_tree_t *
@@ -103,6 +104,16 @@ aa_tree_insert(aa_tree_t *aa, void *item)
 errno_t
 aa_tree_delete(aa_tree_t *aa, void *item)
 {
+  errno_t res;
+
+  if (aa == NULL)
+    return KEINVALID_PARAM;
+
+  res = _r_aa_tree_delete(aa, &aa->root, item);
+  if (res != KSUCCESS)
+    return res;
+
+  aa->size--;
   return KSUCCESS;
 }
 
@@ -114,6 +125,62 @@ aa_tree_size(const aa_tree_t *aa)
     return 0;
 
   return aa->size;
+}
+
+
+static errno_t
+_r_aa_tree_delete(aa_tree_t *aa, aa_node_t **root, void *item)
+{
+  aa_node_t        *r = *root;
+  aa_node_t        *dummy = &aa->dummy;
+  item_cmp_pt       cmp = aa->op->cmp;
+  long              n;
+  errno_t           res;
+  static aa_node_t *delete_node = NULL;
+  static aa_node_t *last_node;
+
+  if (r == dummy)
+    return KSUCCESS;
+
+  last_node = r;
+  n = cmp(item, r->item);
+  if (n == 0)
+    delete_node = r;
+  else if (n < 0)
+    res = _r_aa_tree_delete(aa, &r->left, item);
+  else
+    res = _r_aa_tree_delete(aa, &r->right, item);
+
+  if (res != KSUCCESS)
+    return res;
+  if (delete_node == NULL)
+    return KENOTFOUND;
+
+  if (r == last_node) {
+    delete_node->item = last_node->item;
+    delete_node = dummy;
+    r = r->right;
+
+    if (aa->op->free != NULL)
+      aa->op->free(last_node->item);
+    free(last_node);
+
+    *root = r;
+    return KSUCCESS;
+  }
+
+  if (r->left->level<r->level-1 || r->right->level<r->level-1) {
+    if (r->right->level > --r->level)
+      r->right->level = r->level;
+
+    r = _aa_tree_skew(r);
+    r->right = _aa_tree_skew(r->right);
+    r->right->right = _aa_tree_skew(r->right->right);
+    r = _aa_tree_split(r);
+    r->right = _aa_tree_split(r->right);
+    *root = r;
+  }
+  return KSUCCESS;
 }
 
 

@@ -93,6 +93,8 @@ test_string_aa()
       kerror("aa tree insert [%s] error", sa[i]);
   }
 
+  if (aa_tree_delete(aa, s) != KSUCCESS)
+    kerror("aa tree delete error");
   aa_tree_print(aa);
   aa_tree_destroy(aa);
 }
