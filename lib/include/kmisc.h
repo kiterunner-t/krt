@@ -35,8 +35,8 @@
   } while (0)
 
 
-typedef int bool_t;
-typedef int errno_t;
+typedef int kbool_t;
+typedef int kerrno_t;
 
 
 #endif

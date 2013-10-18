@@ -6,9 +6,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include "kmisc.h"
-#include "item.h"
-#include "item_long.h"
-#include "item_string.h"
+#include "kitem.h"
+#include "kitem_long.h"
+#include "kitem_string.h"
 #include "splay_tree.h"
 
 
@@ -37,7 +37,7 @@ test_long(void)
   int           i;
   int           n;
 
-  splay = splay_tree_init(&int_op);
+  splay = splay_tree_init(&g_long_op);
   if (splay == NULL)
     kerror("init splay tree error");
 
@@ -61,7 +61,7 @@ static void
 test_string(void)
 {
   splay_tree_t *splay;
-  string_t     *s;
+  kstring_t    *s;
   int           i;
   int           n;
   char         *sa[] = {
@@ -77,12 +77,12 @@ test_string(void)
     NULL
   };
 
-  splay = splay_tree_init(&string_op);
+  splay = splay_tree_init(&g_string_op);
   if (splay == NULL)
     kerror("init splay tree error");
 
   for (i = 0; sa[i] != NULL; ++i) {
-    s = string_new((unsigned char *) sa[i], strlen(sa[i]));
+    s = kstring_new((unsigned char *) sa[i], strlen(sa[i]));
     if (s == NULL)
       kerror("malloc string_t error");
 

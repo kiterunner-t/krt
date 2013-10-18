@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include "kmisc.h"
-#include "item.h"
+#include "kitem.h"
 #include "redblack_tree.h"
 
 
@@ -24,7 +24,7 @@ struct redblack_node_s {
   redblack_node_t  *left;
   redblack_node_t  *right;
   redblack_color_e  color;
-  void             *item;
+  kitem_t           item;
 };
 
 
@@ -33,25 +33,25 @@ struct redblack_tree_s {
   redblack_node_t  dummy;
   size_t           size;
   size_t           rotate_count;
-  item_op_t       *op;
+  kitem_op_t      *op;
 };
 
 
 static void _redblack_node_free(redblack_tree_t *rb, redblack_node_t *h);
-static redblack_node_t *_redblack_node_new(void *item, redblack_node_t *l, 
+static redblack_node_t *_redblack_node_new(kitem_t item, redblack_node_t *l, 
         redblack_node_t *r, redblack_color_e c);
 static redblack_node_t *_redblack_rotate_with_right(redblack_node_t *h);
 static redblack_node_t *_redblack_rotate_with_left(redblack_node_t *h);
 static redblack_node_t *_redblack_insert(redblack_tree_t *rb, 
-        redblack_node_t *h, void *item);
-static void _redblack_reblance(redblack_tree_t *rb, void *item, 
+        redblack_node_t *h, kitem_t item);
+static void _redblack_reblance(redblack_tree_t *rb, kitem_t item, 
         redblack_node_t *current, redblack_node_t *parent,
         redblack_node_t *grand, redblack_node_t *great);
 static redblack_node_t *_r_redblack_insert(redblack_tree_t *rb, 
-        redblack_node_t *h, void *item, int sw);
+        redblack_node_t *h, kitem_t item, int sw);
 static void _redblack_print(redblack_tree_t *rb, redblack_node_t *r);
 static redblack_node_t *_redblack_successor(redblack_tree_t *rb, 
-        redblack_node_t **del, redblack_node_t *current, void *item);
+        redblack_node_t **del, redblack_node_t *current, kitem_t item);
 static void _redblack_delete_reblance(redblack_tree_t *rb, 
         redblack_node_t *grand, redblack_node_t *parent, 
         redblack_node_t *current, redblack_node_t *sibling);
@@ -59,7 +59,7 @@ static void _redblack_free_node(redblack_tree_t *rb, redblack_node_t *node);
 
 
 redblack_tree_t *
-redblack_tree_init(item_op_t *op, void *max)
+redblack_tree_init(kitem_op_t *op, kitem_t max)
 {
   redblack_tree_t *rb;
   redblack_node_t *dummy;
@@ -133,7 +133,7 @@ _redblack_node_free(redblack_tree_t *rb, redblack_node_t *h)
 
 
 static redblack_node_t *
-_redblack_node_new(void *item, redblack_node_t *l, redblack_node_t *r, 
+_redblack_node_new(kitem_t item, redblack_node_t *l, redblack_node_t *r, 
                    redblack_color_e c)
 {
   redblack_node_t *node;
@@ -151,7 +151,7 @@ _redblack_node_new(void *item, redblack_node_t *l, redblack_node_t *r,
 
 
 int
-redblack_tree_insert(redblack_tree_t *rb, void *item)
+redblack_tree_insert(redblack_tree_t *rb, kitem_t item)
 {
   redblack_node_t *r;
 
@@ -225,7 +225,7 @@ _redblack_delete_reblance(redblack_tree_t *rb, redblack_node_t *grand,
 
 
 void
-redblack_tree_delete(redblack_tree_t *rb, void *item)
+redblack_tree_delete(redblack_tree_t *rb, kitem_t item)
 {
   redblack_node_t *delnode = NULL;
   redblack_node_t *grand;
@@ -234,7 +234,7 @@ redblack_tree_delete(redblack_tree_t *rb, void *item)
   redblack_node_t *sibling;
   redblack_node_t *gg;
   redblack_node_t *dummy = &rb->dummy;
-  void            *t;
+  kitem_t          t;
 
   grand = rb->root;
   parent = grand;
@@ -308,7 +308,7 @@ redblack_tree_delete(redblack_tree_t *rb, void *item)
 
 static redblack_node_t *
 _redblack_successor(redblack_tree_t *rb, redblack_node_t **del, 
-                    redblack_node_t *current, void *item)
+                    redblack_node_t *current, kitem_t item)
 {
   long n;
 
@@ -324,7 +324,7 @@ _redblack_successor(redblack_tree_t *rb, redblack_node_t **del,
 static void
 _redblack_free_node(redblack_tree_t *rb, redblack_node_t *node)
 {
-  item_free_pt item_free = rb->op->free;
+  kitem_free_pt item_free = rb->op->free;
 
   if (item_free)
     item_free(node->item);
@@ -333,7 +333,7 @@ _redblack_free_node(redblack_tree_t *rb, redblack_node_t *node)
 
 
 static redblack_node_t *
-_redblack_insert(redblack_tree_t *rb, redblack_node_t *h, void *item)
+_redblack_insert(redblack_tree_t *rb, redblack_node_t *h, kitem_t item)
 {
   redblack_node_t *current;
   redblack_node_t *parent;
@@ -341,7 +341,7 @@ _redblack_insert(redblack_tree_t *rb, redblack_node_t *h, void *item)
   redblack_node_t *great;
   redblack_node_t *dummy = &rb->dummy;
   redblack_node_t *node;
-  item_cmp_pt      cmp = rb->op->cmp;
+  kitem_cmp_pt     cmp = rb->op->cmp;
 
   node = _redblack_node_new(item, dummy, dummy, RED);
   if (node == NULL)
@@ -376,13 +376,13 @@ _redblack_insert(redblack_tree_t *rb, redblack_node_t *h, void *item)
 
 
 static void
-_redblack_reblance(redblack_tree_t *rb, void *item,
+_redblack_reblance(redblack_tree_t *rb, kitem_t item,
                    redblack_node_t *current, redblack_node_t *parent, 
                    redblack_node_t *grand, redblack_node_t *great)
 {
   int              gx;
   int              px;
-  item_cmp_pt      cmp = rb->op->cmp;
+  kitem_cmp_pt     cmp = rb->op->cmp;
   redblack_node_t *gg;
 
   current->color = RED;
@@ -453,7 +453,7 @@ _redblack_rotate_with_left(redblack_node_t *h)
 
 
 static redblack_node_t *
-_r_redblack_insert(redblack_tree_t *rb, redblack_node_t *h, void *item, int sw)
+_r_redblack_insert(redblack_tree_t *rb, redblack_node_t *h, kitem_t item, int sw)
 {
   printf("not support\n");
   return NULL;
@@ -475,7 +475,7 @@ redblack_tree_print(redblack_tree_t *rb)
 static void
 _redblack_print(redblack_tree_t *rb, redblack_node_t *r)
 {
-  item_print_pt print = rb->op->print;
+  kitem_print_pt print = rb->op->print;
 
   if (r == &rb->dummy)
     return ;

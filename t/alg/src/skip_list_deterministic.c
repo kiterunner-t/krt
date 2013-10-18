@@ -4,7 +4,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "item.h"
+#include "kitem.h"
 #include "skip_list_deterministic.h"
 
 
@@ -25,23 +25,23 @@ struct dskip_list_s {
   dskip_list_node_t *tail;
   dskip_list_node_t *bottom;
   size_t             size;
-  item_op_t         *op;
-  void              *max;
+  kitem_op_t        *op;
+  kitem_t            max;
 };
 
 
 struct dskip_list_node_s {
   dskip_list_node_t *right;
   dskip_list_node_t *down;
-  void              *item;
+  kitem_t            item;
 };
 
 
 dskip_list_t *
-dskip_list_init(item_op_t *op, void *max)
+dskip_list_init(kitem_op_t *op, kitem_t max)
 {
   dskip_list_node_t *h;
-  dskip_list_t *dsl;
+  dskip_list_t      *dsl;
   dskip_list_node_t *b;
   dskip_list_node_t *t;
 
@@ -100,10 +100,10 @@ dskip_list_destroy(dskip_list_t *dsl)
 
 
 int
-dskip_list_find(dskip_list_t *dsl, void *item, void **result)
+dskip_list_find(dskip_list_t *dsl, kitem_t item, void **result)
 {
   dskip_list_node_t *current;
-  item_cmp_pt        cmp = dsl->op->cmp;
+  kitem_cmp_pt       cmp = dsl->op->cmp;
   long               n;
 
   if (cmp(item, dsl->max) == 0)
@@ -127,7 +127,7 @@ dskip_list_find(dskip_list_t *dsl, void *item, void **result)
 
 
 static dskip_list_node_t *
-_dskip_list_node_new(void *item, dskip_list_node_t *r, dskip_list_node_t *d)
+_dskip_list_node_new(kitem_t item, dskip_list_node_t *r, dskip_list_node_t *d)
 {
   dskip_list_node_t *t;
 
@@ -141,11 +141,11 @@ _dskip_list_node_new(void *item, dskip_list_node_t *r, dskip_list_node_t *d)
 
 
 int
-dskip_list_insert(dskip_list_t *dsl, void *item)
+dskip_list_insert(dskip_list_t *dsl, kitem_t item)
 {
   dskip_list_node_t *current;
   dskip_list_node_t *t;
-  item_cmp_pt        cmp = dsl->op->cmp;
+  kitem_cmp_pt        cmp = dsl->op->cmp;
 
   current = dsl->head;
   dsl->bottom->item = item;
@@ -183,7 +183,7 @@ dskip_list_insert(dskip_list_t *dsl, void *item)
 
 
 void
-dskip_list_delete(dskip_list_t *dsl, void *item)
+dskip_list_delete(dskip_list_t *dsl, kitem_t item)
 {
   printf("not support by now\n");
 }
@@ -194,7 +194,7 @@ dskip_list_print(dskip_list_t *dsl)
 {
   dskip_list_node_t  *level;
   dskip_list_node_t  *current;
-  item_print_pt       print = dsl->op->print;
+  kitem_print_pt      print = dsl->op->print;
   int                 i = 1;
 
   if (dsl->size == 0) {

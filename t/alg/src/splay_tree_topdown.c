@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include "kmisc.h"
-#include "item.h"
+#include "kitem.h"
 #include "splay_tree.h"
 
 
@@ -15,7 +15,7 @@ typedef struct splay_node_s splay_node_t;
 struct splay_node_s {
   splay_node_t *left;
   splay_node_t *right;
-  void         *item;
+  kitem_t       item;
 };
 
 
@@ -23,24 +23,24 @@ struct splay_tree_s {
   splay_node_t *root;
   size_t        size;
   splay_node_t  dummy;
-  item_op_t    *op;
+  kitem_op_t   *op;
 };
 
 
-static inline splay_node_t *_splay_tree_new_node(void *item,
+static inline splay_node_t *_splay_tree_new_node(kitem_t item,
                                                  splay_node_t *l, 
                                                  splay_node_t *r);
 static void _splay_tree_free_node(splay_tree_t *splay, splay_node_t *n);
 static inline splay_node_t *_splay_tree_rotate_with_left(splay_node_t *r);
 static inline splay_node_t *_splay_tree_rotate_with_right(splay_node_t *r);
 static splay_node_t *_splay_tree_splay(splay_tree_t *splay,
-                                       splay_node_t *root, void *item);
+                                       splay_node_t *root, kitem_t item);
 static void _splay_tree_print(const splay_tree_t *splay, 
                               const splay_node_t *root);
 
 
 splay_tree_t *
-splay_tree_init(item_op_t *op)
+splay_tree_init(kitem_op_t *op)
 {
   splay_tree_t *splay;
   splay_node_t *dummy;
@@ -79,12 +79,12 @@ splay_tree_destroy(splay_tree_t *splay)
 
 
 int
-splay_tree_insert(splay_tree_t *splay, void *item)
+splay_tree_insert(splay_tree_t *splay, kitem_t item)
 {
   splay_node_t *t;
   splay_node_t *dummy;
   splay_node_t *root;
-  item_cmp_pt   cmp;
+  kitem_cmp_pt  cmp;
   long          n;
 
   if (splay == NULL)
@@ -132,7 +132,7 @@ splay_tree_insert(splay_tree_t *splay, void *item)
 
 
 int
-splay_tree_delete(splay_tree_t *splay, void *item)
+splay_tree_delete(splay_tree_t *splay, kitem_t item)
 {
   splay_node_t *root;
   splay_node_t *dummy;
@@ -165,16 +165,16 @@ splay_tree_delete(splay_tree_t *splay, void *item)
 }
 
 
-void *
-splay_tree_search(splay_tree_t *splay, void *item)
+kitem_t
+splay_tree_search(splay_tree_t *splay, kkey_t key)
 {
   if (splay == NULL)
     return NULL;
   if (splay->size == 0)
     return NULL;
 
-  splay->root = _splay_tree_splay(splay, splay->root, item);
-  if (splay->op->cmp(item, splay->root->item) != 0)
+  splay->root = _splay_tree_splay(splay, splay->root, key);
+  if (splay->op->cmp_key1(splay->root->item, key) != 0)
     return NULL;
 
   return splay->root->item;
@@ -212,7 +212,7 @@ _splay_tree_print(const splay_tree_t *splay, const splay_node_t *root)
 
 
 static inline splay_node_t *
-_splay_tree_new_node(void *item, splay_node_t *l, splay_node_t *r)
+_splay_tree_new_node(kitem_t item, splay_node_t *l, splay_node_t *r)
 {
   splay_node_t *n;
 
@@ -239,14 +239,14 @@ _splay_tree_free_node(splay_tree_t *splay, splay_node_t *n)
 
 
 static splay_node_t *
-_splay_tree_splay(splay_tree_t *splay, splay_node_t *root, void *item)
+_splay_tree_splay(splay_tree_t *splay, splay_node_t *root, kitem_t item)
 {
   splay_node_t *left_max;
   splay_node_t *right_min;
   splay_node_t *dummy = &splay->dummy;
   splay_node_t *t;
   splay_node_t  head;
-  item_cmp_pt   cmp = splay->op->cmp;
+  kitem_cmp_pt  cmp = splay->op->cmp;
   long          n;
 
   head.left = dummy;

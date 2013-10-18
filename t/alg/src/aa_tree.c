@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "kmisc.h"
-#include "item.h"
+#include "kitem.h"
 #include "aa_tree.h"
 
 
@@ -15,30 +15,30 @@ typedef struct aa_node_s aa_node_t;
 struct aa_node_s {
   aa_node_t *left;
   aa_node_t *right;
+  kitem_t    item;
   int        level;
-  void      *item;
 };
 
 
 struct aa_tree_s {
-  aa_node_t *root;
-  aa_node_t  dummy;
-  size_t     size;
-  item_op_t *op;
+  aa_node_t  *root;
+  aa_node_t   dummy;
+  size_t      size;
+  kitem_op_t *op;
 };
 
 
 static inline aa_node_t *_aa_tree_skew(aa_node_t *root);
 static inline aa_node_t *_aa_tree_split(aa_node_t *root);
-static aa_node_t *_aa_tree_new_node(void *item, aa_node_t *l, aa_node_t *r);
+static aa_node_t *_aa_tree_new_node(kitem_t item, aa_node_t *l, aa_node_t *r);
 static void _aa_tree_destroy(aa_tree_t *aa, aa_node_t *root);
 static void _r_aa_tree_print(const aa_tree_t *aa, const aa_node_t *root);
-static errno_t _r_aa_tree_insert(aa_tree_t *aa, aa_node_t **root, void *item);
-static errno_t _r_aa_tree_delete(aa_tree_t *aa, aa_node_t **root, void *item);
+static kerrno_t _r_aa_tree_insert(aa_tree_t *aa, aa_node_t **root, kitem_t item);
+static kerrno_t _r_aa_tree_delete(aa_tree_t *aa, aa_node_t **root, kitem_t item);
 
 
 aa_tree_t *
-aa_tree_init(item_op_t *op)
+aa_tree_init(kitem_op_t *op)
 {
   aa_tree_t *aa;
   aa_node_t *dummy;
@@ -84,10 +84,10 @@ aa_tree_print(const aa_tree_t *aa)
 }
 
 
-errno_t
-aa_tree_insert(aa_tree_t *aa, void *item)
+kerrno_t
+aa_tree_insert(aa_tree_t *aa, kitem_t item)
 {
-  errno_t res;
+  kerrno_t res;
 
   if (aa == NULL)
     return KEINVALID_PARAM;
@@ -101,10 +101,10 @@ aa_tree_insert(aa_tree_t *aa, void *item)
 }
 
 
-errno_t
-aa_tree_delete(aa_tree_t *aa, void *item)
+kerrno_t
+aa_tree_delete(aa_tree_t *aa, kitem_t item)
 {
-  errno_t res;
+  kerrno_t res;
 
   if (aa == NULL)
     return KEINVALID_PARAM;
@@ -128,14 +128,14 @@ aa_tree_size(const aa_tree_t *aa)
 }
 
 
-static errno_t
-_r_aa_tree_delete(aa_tree_t *aa, aa_node_t **root, void *item)
+static kerrno_t
+_r_aa_tree_delete(aa_tree_t *aa, aa_node_t **root, kitem_t item)
 {
   aa_node_t        *r = *root;
   aa_node_t        *dummy = &aa->dummy;
-  item_cmp_pt       cmp = aa->op->cmp;
+  kitem_cmp_pt      cmp = aa->op->cmp;
   long              n;
-  errno_t           res;
+  kerrno_t           res;
   static aa_node_t *delete_node = NULL;
   static aa_node_t *last_node;
 
@@ -188,7 +188,7 @@ static void
 _aa_tree_print_node(const aa_tree_t *aa, const aa_node_t *n)
 {
   const aa_node_t *dummy = &aa->dummy;
-  item_print_pt    print = aa->op->print;
+  kitem_print_pt   print = aa->op->print;
 
   if (n == dummy)
     printf(" (dummy) ");
@@ -217,7 +217,7 @@ _r_aa_tree_print(const aa_tree_t *aa, const aa_node_t *root)
 
 
 static aa_node_t *
-_aa_tree_new_node(void *item, aa_node_t *l, aa_node_t *r)
+_aa_tree_new_node(kitem_t item, aa_node_t *l, aa_node_t *r)
 {
   aa_node_t *n;
 
@@ -233,14 +233,14 @@ _aa_tree_new_node(void *item, aa_node_t *l, aa_node_t *r)
 }
 
 
-static errno_t
-_r_aa_tree_insert(aa_tree_t *aa, aa_node_t **root, void *item)
+static kerrno_t
+_r_aa_tree_insert(aa_tree_t *aa, aa_node_t **root, kitem_t item)
 {
-  long         n;
-  errno_t      res;
-  item_cmp_pt  cmp = aa->op->cmp;
-  aa_node_t   *dummy = &aa->dummy;
-  aa_node_t   *r = *root;
+  long          n;
+  kerrno_t      res;
+  kitem_cmp_pt  cmp = aa->op->cmp;
+  aa_node_t    *dummy = &aa->dummy;
+  aa_node_t    *r = *root;
 
   if (r == dummy) {
     r = _aa_tree_new_node(item, dummy, dummy);
@@ -273,7 +273,7 @@ _r_aa_tree_insert(aa_tree_t *aa, aa_node_t **root, void *item)
 static void
 _aa_tree_destroy(aa_tree_t *aa, aa_node_t *root)
 {
-  item_free_pt ffree = aa->op->free;
+  kitem_free_pt ffree = aa->op->free;
 
   if (root == &aa->dummy)
     return ;

@@ -8,8 +8,6 @@
 #include <limits.h>
 #include "kmisc.h"
 #include "redblack_tree.h"
-#include "item_long.h"
-#include "item_string.h"
 
 
 static void test_long();
@@ -32,11 +30,13 @@ main(int argc, char **argv)
 static void
 test_long()
 {
+#include "kitem_long.h"
+
   redblack_tree_t *rb;
   long             a[] = { 10, 85, 15, 70, 20, 60, 30, 50, 65, 80, 90, 40, 5, 55 };
   int              i;
 
-  rb = redblack_tree_init(&int_op, (void *) LONG_MAX);
+  rb = redblack_tree_init(&g_long_op, (void *) LONG_MAX);
   if (rb == NULL) 
     kerror("init redblack tree error");
 
@@ -66,8 +66,10 @@ test_long()
 static void
 test_string()
 {
+#include "kitem_string.h"
+
   redblack_tree_t *rb;
-  string_t        *s;
+  kstring_t       *s;
   int              i;
   char            *sa[] = {
     "hello",
@@ -82,16 +84,16 @@ test_string()
     NULL
   };
 
-  s = string_new(0, STRING_INVALID_LEN);
+  s = kstring_new(0, KSTRING_INVALID_LEN);
   if (s == NULL)
     kerror("string new error");
 
-  rb = redblack_tree_init(&string_op, s);
+  rb = redblack_tree_init(&g_string_op, s);
   if (rb == NULL) 
     kerror("init redblack tree error");
 
   for (i = 0; sa[i] != NULL; i++) {
-    s = string_new((unsigned char *) sa[i], strlen(sa[i]));
+    s = kstring_new((unsigned char *) sa[i], strlen(sa[i]));
     if (s == NULL)
       kerror("malloc string_t error");
 

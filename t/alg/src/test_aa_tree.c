@@ -6,9 +6,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include "kmisc.h"
-#include "item.h"
-#include "item_long.h"
-#include "item_string.h"
+#include "kitem.h"
+#include "kitem_long.h"
+#include "kitem_string.h"
 #include "aa_tree.h"
 
 
@@ -37,7 +37,7 @@ test_long_aa(void)
   int           i;
   int           n;
 
-  aa = aa_tree_init(&int_op);
+  aa = aa_tree_init(&g_long_op);
   if (aa == NULL)
     kerror("init aa tree error");
 
@@ -60,11 +60,11 @@ test_long_aa(void)
 static void
 test_string_aa()
 {
-  aa_tree_t *aa;
-  string_t  *s;
-  int        i;
-  int        n;
-  char      *sa[] = {
+  aa_tree_t  *aa;
+  kstring_t  *s;
+  int         i;
+  int         n;
+  char       *sa[] = {
     "hello",
     "world",
     "hj",
@@ -77,12 +77,12 @@ test_string_aa()
     NULL
   };
 
-  aa = aa_tree_init(&string_op);
+  aa = aa_tree_init(&g_string_op);
   if (aa == NULL)
     kerror("init aa tree error");
 
   for (i = 0; sa[i] != NULL; ++i) {
-    s = string_new((unsigned char *) sa[i], strlen(sa[i]));
+    s = kstring_new((unsigned char *) sa[i], strlen(sa[i]));
     if (s == NULL)
       kerror("malloc string_t error");
 
