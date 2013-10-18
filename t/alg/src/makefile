@@ -7,7 +7,8 @@ ALL_OBJS = test_redblack_tree \
            test_skip_list_deterministic \
            test_splay_tree \
            test_aa_tree \
-           test_treap_tree
+           test_treap_tree \
+           test_avl_tree
 
 ITEM_SRC = kitem_long.c kitem_string.c
 
@@ -30,6 +31,8 @@ test_splay_tree: test_splay_tree.c splay_tree_topdown.c
 test_aa_tree: test_aa_tree.c aa_tree.c
 
 test_treap_tree: test_treap_tree.c treap_tree.c
+
+test_avl_tree: test_avl_tree.c avl_tree.c
 
 
 clean:
