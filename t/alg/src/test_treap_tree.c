@@ -42,17 +42,24 @@ test_long_treap(void)
     kerror("init treap tree error");
 
   for (i = 0; i < sizeof(a)/sizeof(long); ++i) {
-    n = treap_tree_insert(treap, (void *) a[i]);
+    n = treap_tree_insert(treap, (kitem_t) a[i]);
     if (n == KEEXIST)
       printf("[NOTICE] insert duplicate key\n");
     else if (n != KSUCCESS)
       kerror("treap tree insert error");
   }
 
-  if (treap_tree_delete(treap, (void *) 30) != KSUCCESS)
-    kerror("treap tree delete error in 30\n");
-  if (treap_tree_delete(treap, (void *) 119) != KSUCCESS)
+  if (treap_tree_delete(treap, (kitem_t) 119) == KENOTFOUND)
+    printf("delete 119, not found\n");
+  else
     kerror("treap tree delete error in 119\n");
+
+  treap_tree_print(treap);
+  printf("begin delete -------------------------\n");
+  for (i = 0; i < sizeof(a)/sizeof(long); ++i) {
+    if (treap_tree_delete(treap, (kitem_t) a[i]) != KSUCCESS)
+      kerror("treap tree delete item [%ld] error", a[i]);
+  }
 
   treap_tree_print(treap);
   treap_tree_destroy(treap);

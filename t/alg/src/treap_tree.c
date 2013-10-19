@@ -189,39 +189,33 @@ _r_treap_tree_delete(treap_tree_t *treap, treap_node_t **r, kitem_t item)
   treap_node_t   *dummy = &treap->dummy;
   treap_node_t   *root = *r;
   long            n;
-  kerrno_t        ret;
-  static kerrno_t found = KENOTFOUND;
 
   if (root == dummy)
-    return found;
+    return KENOTFOUND;
 
   n = treap->op->cmp(item, root->item);
-  if (n > 0) {
-    ret = _r_treap_tree_delete(treap, &root->right, item);
-
-  } else if (n < 0) {
-    ret = _r_treap_tree_delete(treap, &root->left, item);
-
-  } else {
-    found = KSUCCESS;
-
+  if (n == 0) {
     if (root->left->priority < root->right->priority)
       *r = _treap_tree_rotate_with_right(root);
     else
       *r = _treap_tree_rotate_with_left(root);
 
-    if (root == dummy) {
+    if (*r == dummy) {
       if (treap->op->free != NULL)
         treap->op->free(root->item);
       free(root);
       return KSUCCESS;
 
     } else {
-      ret = _r_treap_tree_delete(treap, r, item);
+      return _r_treap_tree_delete(treap, r, item);
     }
-  }
 
-  return ret;
+  } else if (n > 0) {
+    return _r_treap_tree_delete(treap, &root->right, item);
+
+  } else {
+    return _r_treap_tree_delete(treap, &root->left, item);
+  }
 }
 
 
