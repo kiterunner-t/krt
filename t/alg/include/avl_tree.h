@@ -17,7 +17,7 @@ extern void        avl_tree_destroy(avl_tree_t *avl);
 extern int         avl_tree_height(const avl_tree_t *avl);
 extern kerrno_t    avl_tree_insert(avl_tree_t *avl, kitem_t item);
 extern kerrno_t    avl_tree_delete(avl_tree_t *avl, kitem_t item);
-extern kerrno_t    avl_tree_search(avl_tree_t *avl, kkey_t key);
+extern kitem_t     avl_tree_search(avl_tree_t *avl, kkey_t key);
 extern void        avl_tree_print(avl_tree_t *avl);
 
 

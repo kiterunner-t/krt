@@ -15,8 +15,12 @@ typedef struct avl_node_s avl_node_t;
 
 struct avl_tree_s {
   avl_node_t *root;
-  size_t      size;
   kitem_op_t *op;
+  size_t      size;
+
+  // for delete
+  avl_node_t *last_node;
+  avl_node_t *delete_node;
 };
 
 
@@ -31,8 +35,11 @@ struct avl_node_s {
 static void _r_avl_tree_destroy(avl_tree_t *avl, avl_node_t *root);
 static kerrno_t _r_avl_tree_insert(avl_tree_t *avl, kitem_t item, avl_node_t **r);
 static avl_node_t *_avl_tree_new_node(kitem_t item, avl_node_t *l, avl_node_t *r, int height);
+static kerrno_t _r_avl_tree_delete(avl_tree_t *avl, kitem_t item, avl_node_t **r);
+static inline void _avl_tree_free_node(avl_tree_t *avl, avl_node_t *n);
+static kitem_t _r_avl_tree_search(avl_tree_t *avl, kkey_t key, avl_node_t *root);
 static void _r_avl_tree_print(avl_tree_t *avl, avl_node_t *root);
-static int _avl_tree_node_height(avl_node_t *n);
+static inline int _avl_tree_node_height(avl_node_t *n);
 static inline avl_node_t *_avl_tree_rotate_with_leftchild(avl_node_t *root);
 static inline avl_node_t *_avl_tree_rotate_with_rightchild(avl_node_t *root);
 static inline avl_node_t *_avl_tree_double_rotate_with_leftchild(avl_node_t *root);
@@ -51,6 +58,8 @@ avl_tree_init(kitem_op_t *op)
   avl->op = op;
   avl->root = NULL;
   avl->size = 0;
+  avl->delete_node = NULL;
+  avl->last_node = NULL;
   return avl;
 }
 
@@ -75,7 +84,7 @@ _r_avl_tree_destroy(avl_tree_t *avl, avl_node_t *root)
   _r_avl_tree_destroy(avl, root->left);
   _r_avl_tree_destroy(avl, root->right);
   if (avl->op->free != NULL)
-    avl->op->free(root);
+    avl->op->free(root->item);
   free(root);
 }
 
@@ -139,7 +148,7 @@ _r_avl_tree_insert(avl_tree_t *avl, kitem_t item, avl_node_t **r)
       if (cmp(item, root->left->item) < 0)
         root = _avl_tree_rotate_with_leftchild(root);
       else
-        root = _avl_tree_double_rotate_with_rightchild(root);
+        root = _avl_tree_double_rotate_with_leftchild(root);
     }
   
   } else {
@@ -184,14 +193,143 @@ _avl_tree_new_node(kitem_t item, avl_node_t *l, avl_node_t *r, int height)
 kerrno_t
 avl_tree_delete(avl_tree_t *avl, kitem_t item)
 {
+  kerrno_t    ret;
+
+  if (avl == NULL)
+    return KEINVALID_PARAM;
+  if (avl->size==0 || item==KITEM_NULL)
+    return KENOTFOUND;
+
+  ret = _r_avl_tree_delete(avl, item, &avl->root);
+  if (ret != KSUCCESS)
+    return ret;
+
+  avl->size--;
+  avl->last_node = NULL;
+  avl->delete_node = NULL;
   return KSUCCESS;
 }
 
 
-kerrno_t
+static kerrno_t
+_r_avl_tree_delete(avl_tree_t *avl, kitem_t item, avl_node_t **r)
+{
+  avl_node_t *root = *r;
+  long        n;
+  kerrno_t    ret = KSUCCESS;
+  int         lheight;
+  int         rheight;
+  kitem_t     t;
+
+  if (root == NULL)
+    return KSUCCESS;
+
+  avl->last_node = root;
+  n = avl->op->cmp(item, root->item);
+  if (n == 0) {
+    avl->delete_node = root;
+    if (root->left==NULL && root->right==NULL)
+      *r = NULL;
+    else if (root->left==NULL && root->right!=NULL)
+      *r = root->right;
+    else
+      ret = _r_avl_tree_delete(avl, item, &root->left);
+  
+  } else if (n < 0) {
+    ret = _r_avl_tree_delete(avl, item, &root->left);
+
+  } else {
+    ret = _r_avl_tree_delete(avl, item, &root->right);
+  }
+
+  if (ret != KSUCCESS)
+    return ret;
+  if (avl->delete_node == NULL)
+    return KENOTFOUND;
+
+  if (root == avl->last_node) {
+    t = avl->delete_node->item;
+    avl->delete_node->item = avl->last_node->item;
+    avl->last_node->item = t;
+
+    if (avl->last_node->left != NULL) {
+      t = avl->last_node->item;
+      avl->last_node->item = avl->last_node->left->item;
+      avl->last_node->left->item = t;
+      avl->last_node = avl->last_node->left;
+      root->left = NULL;
+      root->height = _avl_tree_node_height(root->right) + 1;
+    } else if (*r != root->right) {
+      *r = NULL;
+    } else {
+      root->height = _avl_tree_node_height(root->right) + 1;
+    }
+
+    _avl_tree_free_node(avl, avl->last_node);
+    return KSUCCESS;
+  }
+
+  lheight = _avl_tree_node_height(root->left);
+  rheight = _avl_tree_node_height(root->right);
+  if (lheight - rheight > 1) {
+    lheight = _avl_tree_node_height(root->left->left);
+    rheight = _avl_tree_node_height(root->left->right);
+    if (lheight > rheight) {
+      *r = _avl_tree_rotate_with_leftchild(root);
+    } else {
+      *r = _avl_tree_double_rotate_with_leftchild(root);
+    }
+
+  } else if (rheight - lheight > 1) {
+    lheight = _avl_tree_node_height(root->right->left);
+    rheight = _avl_tree_node_height(root->right->right);
+    if (rheight > lheight) {
+      *r = _avl_tree_rotate_with_rightchild(root);
+    } else {
+      *r = _avl_tree_double_rotate_with_rightchild(root);
+    }
+  }
+
+  (*r)->height = KMAX(_avl_tree_node_height((*r)->left), 
+                    _avl_tree_node_height((*r)->right)) + 1;
+  return KSUCCESS;
+}
+
+
+static inline void
+_avl_tree_free_node(avl_tree_t *avl, avl_node_t *n)
+{
+  if (avl->op->free != NULL)
+    avl->op->free(n->item);
+  free(n);
+}
+
+
+kitem_t
 avl_tree_search(avl_tree_t *avl, kkey_t key)
 {
-  return KSUCCESS;
+  if (avl==NULL || avl->size==0)
+    return KITEM_NULL;
+
+  return _r_avl_tree_search(avl, key, avl->root);
+}
+
+
+static kitem_t
+_r_avl_tree_search(avl_tree_t *avl, kkey_t key, avl_node_t *root)
+{
+  long n;
+
+  if (root == NULL)
+    return KITEM_NULL;
+
+  n = avl->op->cmp_key1(root->item, key);
+  if (n == 0)
+    return root->item;
+  else if (n < 0)
+    return _r_avl_tree_search(avl, key, root->left);
+  else
+    return _r_avl_tree_search(avl, key, root->right);
 }
 
 
@@ -222,7 +360,7 @@ _r_avl_tree_print(avl_tree_t *avl, avl_node_t *root)
 }
 
 
-static int
+static inline int
 _avl_tree_node_height(avl_node_t *n)
 {
   return (n==NULL) ? -1 : n->height;

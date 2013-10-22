@@ -33,7 +33,7 @@ test_long_avl(void)
 
   avl_tree_t *avl;
   //                  5  c   19  14  1e  f   18  d   12  10
-  long        a[] = { 5, 12, 25, 20, 30, 15, 24, 13, 18, 16 };
+  long        a[] = { 5, 12, 25, 20, 30, 15, 24, 13, 18, 16, 9, 10, 32, 72, 118, 123, 456, 77, 56, 34, 43 };
   int         i;
   int         n;
 
@@ -42,17 +42,27 @@ test_long_avl(void)
     kerror("init avl tree error");
 
   for (i = 0; i < sizeof(a)/sizeof(long); ++i) {
-    n = avl_tree_insert(avl, (void *) a[i]);
+    n = avl_tree_insert(avl, (kitem_t) a[i]);
     if (n == KEEXIST)
       printf("[NOTICE] insert duplicate key\n");
     else if (n != KSUCCESS)
       kerror("avl tree insert error");
   }
 
-  if (avl_tree_delete(avl, (void *) 30) != KSUCCESS)
-    kerror("avl tree delete error in 30\n");
-//  if (avl_tree_delete(avl, (void *) 119) != KENOTFOUND)
-//    kerror("avl tree delete error in 119\n");
+  if (avl_tree_delete(avl, (kitem_t) 119) == KENOTFOUND)
+    printf("delete 119, not found\n");
+  else
+    printf(KERROR_FLAG "avl tree delete error in 119\n");
+
+  avl_tree_print(avl);
+  printf("begin delete -------------------------\n");
+  for (i = 0; i < sizeof(a)/sizeof(long); ++i) {
+    if (avl_tree_delete(avl, (kitem_t) a[i]) != KSUCCESS)
+      printf(KERROR_FLAG " avl tree delete error in %ld\n", a[i]);
+    printf("after delete [%ld]\n", a[i]);
+    avl_tree_print(avl);
+    printf("------------------------\n\n");
+  }
 
   avl_tree_print(avl);
   avl_tree_destroy(avl);
