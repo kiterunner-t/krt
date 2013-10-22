@@ -53,7 +53,7 @@
 
 #define kerror(fmt, ...)                                            \
   do {                                                              \
-    fprintf(stderr, "[ERROR] in <%s/%s/%d>: " fmt "\n",             \
+    fprintf(stderr, KERROR_FLAG "in <%s/%s/%d>: " fmt "\n",         \
             __FILE__, __FUNCTION__, __LINE__, ##__VA_ARGS__);       \
     abort();                                                        \
   } while (0)
