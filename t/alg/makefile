@@ -11,7 +11,8 @@ ALL_OBJS  = test_redblack_tree \
             test_splay_tree \
             test_aa_tree \
             test_treap_tree \
-            test_avl_tree
+            test_avl_tree \
+            test_st_bst
 
 ITEM_SRC = kitem_long.c kitem_string.c
 
@@ -26,8 +27,7 @@ all: $(ALL_OBJS) TAGS
 
 TAGS: src/*.[ch] include/*.h ../../lib/src/*.[ch] ../../lib/include/*.h
 	@rm -f $@
-	find . -name "*.[ch]" | xargs etags -R -a
-	find ../../lib -name "*.[ch]" | xargs etags -R -a
+	find . ../../lib -name "*.[ch]" | xargs etags -R -a
 
 
 test_redblack_tree: test_redblack_tree.c redblack_tree.c $(ITEM_SRC)
@@ -42,6 +42,8 @@ test_aa_tree: test_aa_tree.c aa_tree.c  $(ITEM_SRC)
 test_treap_tree: test_treap_tree.c treap_tree.c  $(ITEM_SRC)
 
 test_avl_tree: test_avl_tree.c avl_tree.c  $(ITEM_SRC)
+
+test_st_bst: test_st.c st_bst.c  $(ITEM_SRC)
 
 
 clean:
