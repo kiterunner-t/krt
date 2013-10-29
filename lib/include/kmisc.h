@@ -9,6 +9,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <assert.h>
+#include <unistd.h>
 
 
 #define KTRUE                                  1
@@ -50,6 +52,8 @@
     KTERM_BOLD KTERM_BGCOLOR_BLACK KTERM_TEXTCOLOR_RED              \
     "[ERROR] " KTERM_CLOSE
 
+#define KALIGN(d, align_size)    (((d)+((align_size)-1)) & ~((align_size)-1))
+
 
 #define kerror(fmt, ...)                                            \
   do {                                                              \
@@ -61,6 +65,16 @@
 
 typedef int kbool_t;
 typedef int kerrno_t;
+
+
+static inline int
+kpagesize()
+{
+  int ps;
+  ps = sysconf(_SC_PAGE_SIZE);
+  assert(ps != 0);
+  return ps;
+}
 
 
 #endif
