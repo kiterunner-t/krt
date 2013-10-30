@@ -87,7 +87,8 @@ dskip_list_destroy(dskip_list_t *dsl)
     return ;
 
   if (dsl->op->free != NULL) {
-    for (current = dsl->head; current->down != dsl->bottom; current = current->down)
+    for (current = dsl->head; current->down != dsl->bottom; 
+         current = current->down)
       ;
 
     for ( ; current != dsl->tail; current = current->right) 

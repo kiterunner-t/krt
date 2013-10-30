@@ -11,9 +11,9 @@
 #endif
 
 
-typedef void             *kitem_t;
-typedef void             *kkey_t;
-typedef struct item_op_s  kitem_op_t;
+typedef void              *kitem_t;
+typedef void              *kkey_t;
+typedef struct kitem_op_s  kitem_op_t;
 
 
 typedef long (*kitem_cmp_pt)(kitem_t item1, kitem_t item2);
@@ -22,7 +22,7 @@ typedef void (*kitem_print_pt)(kitem_t item);
 typedef void (*kitem_free_pt)(kitem_t item);
 
 
-struct item_op_s {
+struct kitem_op_s {
   kitem_cmp_pt      cmp;
   kitem_cmp_key1_pt cmp_key1;
   kitem_print_pt    print;

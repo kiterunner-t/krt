@@ -14,11 +14,12 @@ ALL_OBJS  = test_redblack_tree \
             test_avl_tree \
             test_st_bst
 
-ITEM_SRC = kitem_long.c kitem_string.c
+ITEM_SRC = kitem_long.c kitem_string.c kitem.h kitem_long.h kitem_string.h \
+           kmisc.h
 
 
 % :
-	$(CC) $(CC_FLAGS) $(CPP_FLAGS) -o $(BINDIR)/$@ $^ -lk
+	$(CC) $(CC_FLAGS) $(CPP_FLAGS) -o $(BINDIR)/$@ $(filter %.c,$^) -lk
 
 
 all: $(ALL_OBJS) TAGS
@@ -43,7 +44,7 @@ test_treap_tree: test_treap_tree.c treap_tree.c  $(ITEM_SRC)
 
 test_avl_tree: test_avl_tree.c avl_tree.c  $(ITEM_SRC)
 
-test_st_bst: test_st.c st_bst.c  $(ITEM_SRC)
+test_st_bst: test_st.c st_bst.c st.h st_bst.h stack_array.c stack.h $(ITEM_SRC)
 
 
 clean:

@@ -17,6 +17,7 @@ static void test_string_st(void);
 int
 main(int argc, char **argv)
 {
+//#define RECURSION
   printf("\n\n    test_long_st\n");
   test_long_st();
 

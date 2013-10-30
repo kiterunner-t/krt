@@ -9,6 +9,10 @@
 #include "st.h"
 #include "st_bst.h"
 
+#ifndef RECURSION
+#include "stack.h"
+#endif
+
 
 static st_bst_node_t *g_head;
 static st_bst_node_t *g_dummy;
@@ -20,12 +24,15 @@ static st_bst_node_t *g_last_node;
 
 
 static void _r_st_bst_destroy(st_bst_node_t *root);
+static void _st_bst_destroy(st_bst_node_t *root);
+static st_bst_node_t *_st_bst_insert(st_bst_node_t *root, kitem_t item);
 static void _st_bst_free_node(st_bst_node_t *node);
 static st_bst_node_t *_r_st_bst_delete(st_bst_node_t *root, kitem_t item);
+static kitem_t _r_st_bst_search(st_bst_node_t *root, kkey_t key);
+static kitem_t _st_bst_search(st_bst_node_t *root, kitem_t key);
 static void _r_st_bst_sort(st_bst_node_t *root, st_visit_pt visit);
 static st_bst_node_t *_st_bst_new_node(kitem_t item, st_bst_node_t *l, st_bst_node_t *r, size_t n);
 static st_bst_node_t *_r_st_bst_insert(st_bst_node_t *root, kitem_t item);
-static kitem_t _r_st_bst_search(st_bst_node_t *root, kkey_t key);
 
 
 kerrno_t
@@ -34,11 +41,13 @@ st_init(kitem_op_t *op)
   if (op == NULL)
     return KEINVALID_PARAM;
 
-  g_dummy = _st_bst_new_node(KITEM_NULL, NULL, NULL, 0);
-  if (g_dummy == NULL)
+  g_head = _st_bst_new_node(KITEM_NULL, NULL, NULL, 0);
+  if (g_head == NULL)
     return KEMEM;
 
-  g_head = g_dummy;
+  g_dummy = g_head;
+  g_dummy->left = g_dummy;
+  g_dummy->right = g_dummy;
   g_item_op = op;
   return KSUCCESS;
 }
@@ -52,7 +61,12 @@ st_destroy(void)
     return ;
   }
 
+#ifdef RECURSION
   _r_st_bst_destroy(g_head);
+#else
+  _st_bst_destroy(g_head);
+#endif
+
   free(g_dummy);
 }
 
@@ -71,6 +85,47 @@ _r_st_bst_destroy(st_bst_node_t *root)
 }
 
 
+static void
+_st_bst_destroy(st_bst_node_t *root)
+{
+  st_bst_node_t  *cur;
+  st_bst_node_t **pcur;
+  stack_t        *stack;
+
+  // hypothesis: all calls for the stack would not be failed
+  stack = stack_init(128);
+  (void) stack_push(stack, g_dummy);
+  for (pcur = &root, cur = root; cur != g_dummy; ) {
+    if (cur->left==g_dummy && cur->right==g_dummy) {
+      _st_bst_free_node(cur);
+      *pcur = g_dummy;
+
+      // "g_dummy->right == dummy" gives the terminate condition
+      pcur = stack_peek(stack);
+      if ((*pcur)->right == g_dummy) {
+        pcur = stack_pop(stack);
+        cur = *pcur;
+      } else {
+        cur = cur->right;
+        pcur = &cur->right;
+      }
+
+    } else {
+      stack_push(stack, pcur);
+      if (cur->left != g_dummy) {
+        cur = cur->left;
+        pcur = &cur->left;
+      } else {
+        cur = cur->right;
+        pcur = &cur->right;
+      }
+    }
+  }
+
+  stack_destroy(stack);
+}
+
+
 size_t
 st_size(void)
 {
@@ -83,12 +138,42 @@ st_insert(kitem_t item)
 {
   st_bst_node_t *n;
 
+#ifdef RECURSION
   n = _r_st_bst_insert(g_head, item);
+#else
+  n = _st_bst_insert(g_head, item);
+#endif
 
   if (n == NULL)
     return KERROR;
   g_head = n;
   return KSUCCESS;
+}
+
+
+static st_bst_node_t *
+_st_bst_insert(st_bst_node_t *root, kitem_t item)
+{
+  st_bst_node_t  *cur;
+  st_bst_node_t **p = &root;
+  long            n;
+
+  for (cur = root; cur != g_dummy; ) {
+    n = g_item_op->cmp(cur->item, item);
+    if (n == 0)
+      return NULL;
+
+    p = (n < 0) ? &cur->right : &cur->left;
+    if (*p != g_dummy)
+      cur = *p;
+    else
+      break;
+  }
+
+  *p = _st_bst_new_node(item, g_dummy, g_dummy, 1);
+  if (*p == NULL)
+     return NULL;
+  return root;
 }
 
 
@@ -168,7 +253,49 @@ st_search(kkey_t key)
   if (g_head == g_dummy)
     return KITEM_NULL;
 
+#ifdef RECURSION
   return _r_st_bst_search(g_head, key);
+#else
+  return _st_bst_search(g_head, key);
+#endif
+}
+
+
+static kitem_t
+_r_st_bst_search(st_bst_node_t *root, kkey_t key)
+{
+  long n;
+  
+  if (root == g_dummy)
+    return KITEM_NULL;
+  
+  n = g_item_op->cmp_key1(root->item, key);
+  if (n == 0)
+    return root->item;
+  else if (n < 0)
+    return _r_st_bst_search(root->right, key);
+  else
+    return _r_st_bst_search(root->left, key);
+}
+
+
+static kitem_t
+_st_bst_search(st_bst_node_t *root, kitem_t key)
+{
+  st_bst_node_t *cur;
+  long           n;
+
+  for (cur = root; cur != g_dummy; ) {
+    n = g_item_op->cmp_key1(root->item, key);
+    if (n == 0)
+      return cur->item;
+    else if (n < 0)
+      cur = cur->right;
+    else
+      cur = cur->left;
+  }
+
+  return KITEM_NULL;
 }
 
 
@@ -239,23 +366,5 @@ _r_st_bst_insert(st_bst_node_t *root, kitem_t item)
   
   root->size++;
   return root;
-}
-
-
-static kitem_t
-_r_st_bst_search(st_bst_node_t *root, kkey_t key)
-{
-  long n;
-  
-  if (root == g_dummy)
-    return KITEM_NULL;
-  
-  n = g_item_op->cmp_key1(root->item, key);
-  if (n == 0)
-    return root->item;
-  else if (n < 0)
-    return _r_st_bst_search(root->left, key);
-  else
-    return _r_st_bst_search(root->right, key);
 }
 

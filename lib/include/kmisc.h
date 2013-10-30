@@ -27,6 +27,7 @@
 #define KERROR                                -1
 #define KEINVALID_PARAM                       -2
 #define KEMEM                                 -3
+#define KEEXCEED                              -4
 
 
 #define KTERM_CLOSE                           "\033[0m"
