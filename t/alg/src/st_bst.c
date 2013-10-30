@@ -88,36 +88,31 @@ _r_st_bst_destroy(st_bst_node_t *root)
 static void
 _st_bst_destroy(st_bst_node_t *root)
 {
-  st_bst_node_t  *cur;
   st_bst_node_t **pcur;
   stack_t        *stack;
 
   // hypothesis: all calls for the stack would not be failed
   stack = stack_init(128);
-  (void) stack_push(stack, g_dummy);
-  for (pcur = &root, cur = root; cur != g_dummy; ) {
-    if (cur->left==g_dummy && cur->right==g_dummy) {
-      _st_bst_free_node(cur);
+  (void) stack_push(stack, &g_dummy);
+  for (pcur = &root; *pcur != g_dummy; ) {
+    if ((*pcur)->left==g_dummy && (*pcur)->right==g_dummy) {
+      _st_bst_free_node(*pcur);
       *pcur = g_dummy;
 
       // "g_dummy->right == dummy" gives the terminate condition
       pcur = stack_peek(stack);
       if ((*pcur)->right == g_dummy) {
         pcur = stack_pop(stack);
-        cur = *pcur;
       } else {
-        cur = cur->right;
-        pcur = &cur->right;
+        pcur = &(*pcur)->right;
       }
 
     } else {
       stack_push(stack, pcur);
-      if (cur->left != g_dummy) {
-        cur = cur->left;
-        pcur = &cur->left;
+      if ((*pcur)->left != g_dummy) {
+        pcur = &(*pcur)->left;
       } else {
-        cur = cur->right;
-        pcur = &cur->right;
+        pcur = &(*pcur)->right;
       }
     }
   }
