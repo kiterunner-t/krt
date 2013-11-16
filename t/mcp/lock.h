@@ -7,8 +7,6 @@
 
 #include "thread.h"
 
-#define mem_barrier() __asm__ __volatile__("" : : : "memory")
-
 
 typedef struct lock_s lock_t;
 
