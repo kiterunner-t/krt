@@ -27,7 +27,7 @@ EOF
 
 del() {
   local _file
-  for _file in $@; do
+  for _file in "$@"; do
     test -e $_file && rm -rf $_file
   done
 }
@@ -35,7 +35,7 @@ del() {
 
 create_dir() {
   local _dir
-  for _dir in $@; do
+  for _dir in "$@"; do
     test ! -e $_dir && mkdir $_dir
   done
 }

@@ -21,7 +21,7 @@ EOF
 
 _EXCLUSIVE_DIRS=$(cat <<-EOF
   .git
-  p 
+  p
   packages
 EOF
 )
