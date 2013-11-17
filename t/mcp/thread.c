@@ -66,3 +66,11 @@ thread_id(thread_t *thread)
   return thread->id;
 }
 
+
+void *
+thread_arg(thread_t *thread)
+{
+  assert(thread != NULL);
+  return thread->arg;
+}
+

@@ -21,6 +21,7 @@ extern void      thread_destroy(thread_t *thread, int join);
 
 extern void      thread_start(thread_t *thread);
 extern int       thread_id(thread_t *thread);
+extern void     *thread_arg(thread_t *thread);
 
 
 #endif
