@@ -21,6 +21,50 @@ union inotify_event_s {
 };
 
 
+// from kernel 2.6.32 linux/inotify.h
+const char *g_event_desc[] = {
+  "File was accessed",
+  "File was modified",
+  "Metadata changed",
+  "Writtable file was closed",
+
+  "Unwrittable file closed",
+  "File was opened",
+  "File was moved from X",
+  "File was moved to Y",
+
+  "Subfile was created",
+  "Subfile was deleted",
+  "Self was deleted",
+  "Self was moved",
+
+  NULL,
+  "Backing fs was unmounted",
+  "Event queued overflowed",
+  "File was ignored",
+
+  "only watch the path if it is a directory",
+  "don't follow a sym link",
+  NULL,
+  NULL,
+
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+
+  NULL,
+  "add to the mask of an already existing watch",
+  "event occurred against dir",
+  "only send event once"
+};
+
+
 int
 main(int argc, char **argv)
 {
@@ -29,63 +73,41 @@ main(int argc, char **argv)
   int              fd;
   int              wd;
   int              n;
+  int              j;
 
   fd = inotify_init1(IN_CLOEXEC /* IN_NONBLOCK */);
-  wd = inotify_add_watch(fd, "./src/test.txt", IN_ALL_EVENTS);
+  wd = inotify_add_watch(fd, "./src", IN_ALL_EVENTS);
 
   for ( ; ; ) {
     n = read(fd, buf, sizeof(buf));
-    if (n < sizeof(struct inotify_event))
+    if (n<0 || n<(sizeof(struct inotify_event)))
       kerror("read error: %s", strerror(errno));
 
     int len = 0;
     printf("(n is %d) ", n);
     for ( ; len < n; ) {
       event = (inotify_event_u *) buf + len;
+      len += sizeof(struct inotify_event) + event->event.len;
+      if (event->event.wd != wd) {
+        printf("<unkown wd: %d>\n", event->event.wd);
+        continue;
+      }
+
       if (event->event.len > 0)
         printf("%s: ", event->event.name);
       else
-        printf("%s: ", "./src/test.txt");
+        printf("%s: ", "./src");
 
       uint32_t mask = event->event.mask;
-      printf("[%d, 0x%x, %d] --> ", event->event.wd, mask, event->event.cookie);
-      if (mask & IN_ACCESS)
-        printf("IN_ACCESS");
-      else if (mask & IN_ATTRIB)
-        printf("IN_ATTRIB");
-      else if (mask & IN_CLOSE_WRITE)
-        printf("IN_CLOSE_WRITE");
-      else if (mask & IN_CLOSE_NOWRITE)
-        printf("IN_CLOSE_NOWRITE");
-      else if (mask & IN_CREATE)
-        printf("IN_CREATE");
-      else if (mask & IN_DELETE)
-        printf("IN_DELETE");
-      else if (mask & IN_DELETE_SELF)
-        printf("IN_DELETE_SELF");
-      else if (mask & IN_MODIFY)
-        printf("IN_MODIFY");
-      else if (mask & IN_MOVE_SELF)
-        printf("IN_MOVE_SELF");
-      else if (mask & IN_MOVED_FROM)
-        printf("IN_MOVED_FROM");
-      else if (mask & IN_MOVED_TO)
-        printf("IN_MOVED_TO");
-      else if (mask & IN_OPEN)
-        printf("IN_OPEN");
-      else if (mask & IN_IGNORED)
-        printf("IN_IGNORED");
-      else if (mask & IN_ISDIR)
-        printf("IN_ISDIR");
-      else if (mask & IN_Q_OVERFLOW)
-        printf("IN_Q_OVERFLOW");
-      else if (mask & IN_UNMOUNT)
-        printf("IN_UNMOUNT");
-      else
-        printf("unkown");
+      printf("[wd: %d, mask: 0x%x, cookie: %d, len: %d] --> ", 
+            event->event.wd, mask, event->event.cookie, event->event.len);
+
+      for (j = 0; j < 32; ++j) {
+        if (g_event_desc[j]!=NULL && (mask&(1<<j)))
+          printf("%s, ", g_event_desc[j]);
+      }
 
       printf("[%ld]\n", sizeof(struct inotify_event) + event->event.len);
-      len += sizeof(struct inotify_event) + event->event.len;
     }
 
     printf("\n");
