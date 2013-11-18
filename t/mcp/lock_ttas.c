@@ -28,6 +28,7 @@ lock_destroy(lock_t *lock)
   free(lock);
 }
 
+
 void
 lock(lock_t *lock, thread_t *thread)
 {

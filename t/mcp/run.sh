@@ -20,7 +20,7 @@ for _bin in $_ALL_BINS; do
   echo "test $_bin"
   echo "---------------------------------"
 
-  for _shared_max in 50000 100000 2000000 4000000 8000000; do
+  for _shared_max in 500000 1000000 2000000 4000000 8000000; do
     if [ "$_bin" = "t_lock_peterson" ]; then
       echo "(shared_max: $_shared_max)"
       time bin/$_bin 2 $_shared_max
@@ -34,9 +34,9 @@ for _bin in $_ALL_BINS; do
       time bin/$_bin 4 $_shared_max
       echo
     done
-
-    echo
-    echo
   done
+
+  echo
+  echo
 done
 
