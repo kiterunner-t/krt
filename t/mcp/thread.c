@@ -8,9 +8,6 @@
 #include "thread.h"
 
 
-typedef struct thread_s thread_t;
-
-
 struct thread_s {
   int              id;
   pthread_t        pthread;

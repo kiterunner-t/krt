@@ -21,7 +21,7 @@ for _bin in $_ALL_BINS; do
   echo "---------------------------------"
 
   for _shared_max in 500000 1000000 2000000 4000000 8000000; do
-    if [ "$_bin" = "t_lock_peterson" ]; then
+    if [ "$_bin" = "lock_peterson" ]; then
       echo "(shared_max: $_shared_max)"
       time bin/$_bin 2 $_shared_max
       echo
@@ -31,7 +31,7 @@ for _bin in $_ALL_BINS; do
 
     for _thread_num in 2 4 8 16 32; do
       echo "(thread_num: $_thread_num, shared_max: $_shared_max)"
-      time bin/$_bin 4 $_shared_max
+      time bin/$_bin $_thread_num $_shared_max
       echo
     done
   done

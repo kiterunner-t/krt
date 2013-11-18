@@ -2,7 +2,7 @@
 # Copyleft (C) KRT, by kiterunner_t
 
 
-delcare -A _FUNCTOINS
+declare -A _FUNCTOINS
 
 
 function _load_file() {
@@ -62,7 +62,7 @@ function require() {
   eval "$(declare -f toupper | sed 's/toupper ()/function string.toupper()/')"
   unset -f toupper
 
-  ktrap "_delfunc" EXIT
-  ktrap "echo hello" EXIT
+#  ktrap "_delfunc" EXIT
+#  ktrap "echo hello" EXIT
 }
 

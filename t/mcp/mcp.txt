@@ -1,0 +1,760 @@
+test t_lock_no
+---------------------------------
+(thread_num: 2, shared_max: 500000)
+shared is: 1000000
+
+real	0m0.030s
+user	0m0.000s
+sys	0m0.028s
+
+(thread_num: 4, shared_max: 500000)
+shared is: 2000000
+
+real	0m0.069s
+user	0m0.012s
+sys	0m0.100s
+
+(thread_num: 8, shared_max: 500000)
+shared is: 4000000
+
+real	0m0.120s
+user	0m0.040s
+sys	0m0.168s
+
+(thread_num: 16, shared_max: 500000)
+shared is: 8000000
+
+real	0m0.028s
+user	0m0.044s
+sys	0m0.004s
+
+(thread_num: 32, shared_max: 500000)
+shared is: 16000000
+
+real	0m0.075s
+user	0m0.132s
+sys	0m0.080s
+
+(thread_num: 2, shared_max: 1000000)
+shared is: 2000000
+
+real	0m0.006s
+user	0m0.008s
+sys	0m0.000s
+
+(thread_num: 4, shared_max: 1000000)
+shared is: 4000000
+
+real	0m0.017s
+user	0m0.024s
+sys	0m0.008s
+
+(thread_num: 8, shared_max: 1000000)
+shared is: 8000000
+
+real	0m0.033s
+user	0m0.080s
+sys	0m0.004s
+
+(thread_num: 16, shared_max: 1000000)
+shared is: 16000000
+
+real	0m0.044s
+user	0m0.128s
+sys	0m0.008s
+
+(thread_num: 32, shared_max: 1000000)
+shared is: 32000000
+
+real	0m0.071s
+user	0m0.244s
+sys	0m0.016s
+
+(thread_num: 2, shared_max: 2000000)
+shared is: 4000000
+
+real	0m0.010s
+user	0m0.016s
+sys	0m0.000s
+
+(thread_num: 4, shared_max: 2000000)
+shared is: 8000000
+
+real	0m0.039s
+user	0m0.132s
+sys	0m0.008s
+
+(thread_num: 8, shared_max: 2000000)
+shared is: 16000000
+
+real	0m0.046s
+user	0m0.124s
+sys	0m0.020s
+
+(thread_num: 16, shared_max: 2000000)
+shared is: 32000000
+
+real	0m0.069s
+user	0m0.236s
+sys	0m0.000s
+
+(thread_num: 32, shared_max: 2000000)
+shared is: 64000000
+
+real	0m0.118s
+user	0m0.400s
+sys	0m0.020s
+
+(thread_num: 2, shared_max: 4000000)
+shared is: 8000000
+
+real	0m0.018s
+user	0m0.032s
+sys	0m0.000s
+
+(thread_num: 4, shared_max: 4000000)
+shared is: 16000000
+
+real	0m0.072s
+user	0m0.180s
+sys	0m0.000s
+
+(thread_num: 8, shared_max: 4000000)
+shared is: 32000000
+
+real	0m0.078s
+user	0m0.256s
+sys	0m0.008s
+
+(thread_num: 16, shared_max: 4000000)
+shared is: 64000000
+
+real	0m0.140s
+user	0m0.496s
+sys	0m0.008s
+
+(thread_num: 32, shared_max: 4000000)
+shared is: 128000000
+
+real	0m0.242s
+user	0m0.892s
+sys	0m0.016s
+
+(thread_num: 2, shared_max: 8000000)
+shared is: 16000000
+
+real	0m0.035s
+user	0m0.056s
+sys	0m0.008s
+
+(thread_num: 4, shared_max: 8000000)
+shared is: 32000000
+
+real	0m0.162s
+user	0m0.608s
+sys	0m0.000s
+
+(thread_num: 8, shared_max: 8000000)
+shared is: 64000000
+
+real	0m0.171s
+user	0m0.568s
+sys	0m0.012s
+
+(thread_num: 16, shared_max: 8000000)
+shared is: 128000000
+
+real	0m0.293s
+user	0m1.068s
+sys	0m0.012s
+
+(thread_num: 32, shared_max: 8000000)
+shared is: 256000000
+
+real	0m0.524s
+user	0m2.020s
+sys	0m0.020s
+
+
+
+test lock_pthread_mutex
+---------------------------------
+(thread_num: 2, shared_max: 500000)
+shared is: 1000000
+
+real	0m0.123s
+user	0m0.100s
+sys	0m0.120s
+
+(thread_num: 4, shared_max: 500000)
+shared is: 2000000
+
+real	0m0.316s
+user	0m0.208s
+sys	0m0.484s
+
+(thread_num: 8, shared_max: 500000)
+shared is: 4000000
+
+real	0m1.186s
+user	0m0.304s
+sys	0m3.524s
+
+(thread_num: 16, shared_max: 500000)
+shared is: 8000000
+
+real	0m2.892s
+user	0m0.496s
+sys	0m8.721s
+
+(thread_num: 32, shared_max: 500000)
+shared is: 16000000
+
+real	0m9.913s
+user	0m0.796s
+sys	0m32.078s
+
+(thread_num: 2, shared_max: 1000000)
+shared is: 2000000
+
+real	0m0.304s
+user	0m0.156s
+sys	0m0.404s
+
+(thread_num: 4, shared_max: 1000000)
+shared is: 4000000
+
+real	0m0.727s
+user	0m0.328s
+sys	0m1.536s
+
+(thread_num: 8, shared_max: 1000000)
+shared is: 8000000
+
+real	0m1.796s
+user	0m0.552s
+sys	0m4.872s
+
+(thread_num: 16, shared_max: 1000000)
+shared is: 16000000
+
+real	0m7.356s
+user	0m1.060s
+sys	0m23.421s
+
+(thread_num: 32, shared_max: 1000000)
+shared is: 32000000
+
+real	0m18.127s
+user	0m1.312s
+sys	1m1.016s
+
+(thread_num: 2, shared_max: 2000000)
+shared is: 4000000
+
+real	0m0.512s
+user	0m0.436s
+sys	0m0.520s
+
+(thread_num: 4, shared_max: 2000000)
+shared is: 8000000
+
+real	0m1.358s
+user	0m0.484s
+sys	0m3.328s
+
+(thread_num: 8, shared_max: 2000000)
+shared is: 16000000
+
+real	0m2.758s
+user	0m1.136s
+sys	0m7.348s
+
+(thread_num: 16, shared_max: 2000000)
+shared is: 32000000
+
+real	0m13.530s
+user	0m1.876s
+sys	0m42.751s
+
+(thread_num: 32, shared_max: 2000000)
+shared is: 64000000
+
+real	0m37.103s
+user	0m2.676s
+sys	2m5.040s
+
+(thread_num: 2, shared_max: 4000000)
+shared is: 8000000
+
+real	0m1.056s
+user	0m1.084s
+sys	0m0.920s
+
+(thread_num: 4, shared_max: 4000000)
+shared is: 16000000
+
+real	0m2.545s
+user	0m1.404s
+sys	0m5.196s
+
+(thread_num: 8, shared_max: 4000000)
+shared is: 32000000
+
+real	0m7.213s
+user	0m2.020s
+sys	0m20.945s
+
+(thread_num: 16, shared_max: 4000000)
+shared is: 64000000
+
+real	0m26.569s
+user	0m3.864s
+sys	1m24.229s
+
+(thread_num: 32, shared_max: 4000000)
+shared is: 128000000
+
+real	1m6.771s
+user	0m6.380s
+sys	3m42.498s
+
+(thread_num: 2, shared_max: 8000000)
+shared is: 16000000
+
+real	0m2.126s
+user	0m2.168s
+sys	0m1.872s
+
+(thread_num: 4, shared_max: 8000000)
+shared is: 32000000
+
+real	0m5.283s
+user	0m2.620s
+sys	0m13.221s
+
+(thread_num: 8, shared_max: 8000000)
+shared is: 64000000
+
+real	0m15.746s
+user	0m3.852s
+sys	0m45.711s
+
+(thread_num: 16, shared_max: 8000000)
+shared is: 128000000
+
+real	0m50.907s
+user	0m6.968s
+sys	2m40.518s
+
+(thread_num: 32, shared_max: 8000000)
+shared is: 256000000
+
+real	2m19.096s
+user	0m12.337s
+sys	7m42.421s
+
+
+
+test lock_peterson
+---------------------------------
+(shared_max: 500000)
+shared is: 999916
+
+real	0m0.081s
+user	0m0.148s
+sys	0m0.008s
+
+
+(shared_max: 1000000)
+shared is: 1999796
+
+real	0m0.198s
+user	0m0.380s
+sys	0m0.004s
+
+
+(shared_max: 2000000)
+shared is: 3999488
+
+real	0m0.436s
+user	0m0.860s
+sys	0m0.008s
+
+
+(shared_max: 4000000)
+shared is: 7999086
+
+real	0m0.781s
+user	0m1.544s
+sys	0m0.008s
+
+
+(shared_max: 8000000)
+shared is: 15998293
+
+real	0m1.692s
+user	0m3.364s
+sys	0m0.000s
+
+
+
+
+test lock_tas
+---------------------------------
+(thread_num: 2, shared_max: 500000)
+shared is: 1000000
+
+real	0m0.045s
+user	0m0.072s
+sys	0m0.004s
+
+(thread_num: 4, shared_max: 500000)
+shared is: 2000000
+
+real	0m0.227s
+user	0m0.688s
+sys	0m0.036s
+
+(thread_num: 8, shared_max: 500000)
+shared is: 4000000
+
+real	0m0.892s
+user	0m3.360s
+sys	0m0.044s
+
+(thread_num: 16, shared_max: 500000)
+shared is: 8000000
+
+real	0m3.647s
+user	0m14.281s
+sys	0m0.020s
+
+(thread_num: 32, shared_max: 500000)
+shared is: 16000000
+
+real	0m14.098s
+user	0m55.511s
+sys	0m0.292s
+
+(thread_num: 2, shared_max: 1000000)
+shared is: 2000000
+
+real	0m0.127s
+user	0m0.240s
+sys	0m0.000s
+
+(thread_num: 4, shared_max: 1000000)
+shared is: 4000000
+
+real	0m0.723s
+user	0m2.708s
+sys	0m0.012s
+
+(thread_num: 8, shared_max: 1000000)
+shared is: 8000000
+
+real	0m1.790s
+user	0m6.888s
+sys	0m0.012s
+
+(thread_num: 16, shared_max: 1000000)
+shared is: 16000000
+
+real	0m6.657s
+user	0m26.298s
+sys	0m0.048s
+
+(thread_num: 32, shared_max: 1000000)
+shared is: 32000000
+
+real	0m28.395s
+user	1m51.771s
+sys	0m0.096s
+
+(thread_num: 2, shared_max: 2000000)
+shared is: 4000000
+
+real	0m0.268s
+user	0m0.528s
+sys	0m0.000s
+
+(thread_num: 4, shared_max: 2000000)
+shared is: 8000000
+
+real	0m0.976s
+user	0m3.644s
+sys	0m0.020s
+
+(thread_num: 8, shared_max: 2000000)
+shared is: 16000000
+
+real	0m3.768s
+user	0m14.677s
+sys	0m0.020s
+
+(thread_num: 16, shared_max: 2000000)
+shared is: 32000000
+
+real	0m17.237s
+user	1m8.000s
+sys	0m0.088s
+
+(thread_num: 32, shared_max: 2000000)
+shared is: 64000000
+
+real	1m4.925s
+user	4m16.596s
+sys	0m0.192s
+
+(thread_num: 2, shared_max: 4000000)
+shared is: 8000000
+
+real	0m0.463s
+user	0m0.800s
+sys	0m0.024s
+
+(thread_num: 4, shared_max: 4000000)
+shared is: 16000000
+
+real	0m2.121s
+user	0m7.816s
+sys	0m0.016s
+
+(thread_num: 8, shared_max: 4000000)
+shared is: 32000000
+
+real	0m8.130s
+user	0m31.878s
+sys	0m0.016s
+
+(thread_num: 16, shared_max: 4000000)
+shared is: 64000000
+
+real	0m29.741s
+user	1m57.347s
+sys	0m0.052s
+
+(thread_num: 32, shared_max: 4000000)
+shared is: 128000000
+
+real	2m3.793s
+user	8m10.795s
+sys	0m0.228s
+
+(thread_num: 2, shared_max: 8000000)
+shared is: 16000000
+
+real	0m0.901s
+user	0m1.608s
+sys	0m0.016s
+
+(thread_num: 4, shared_max: 8000000)
+shared is: 32000000
+
+real	0m4.449s
+user	0m16.325s
+sys	0m0.028s
+
+(thread_num: 8, shared_max: 8000000)
+shared is: 64000000
+
+real	0m16.378s
+user	1m4.620s
+sys	0m0.052s
+
+(thread_num: 16, shared_max: 8000000)
+shared is: 128000000
+
+real	1m3.365s
+user	4m10.604s
+sys	0m0.160s
+
+(thread_num: 32, shared_max: 8000000)
+shared is: 256000000
+
+real	4m28.884s
+user	17m46.251s
+sys	0m0.672s
+
+
+
+test lock_ttas
+---------------------------------
+(thread_num: 2, shared_max: 500000)
+shared is: 1000000
+
+real	0m0.040s
+user	0m0.064s
+sys	0m0.004s
+
+(thread_num: 4, shared_max: 500000)
+shared is: 2000000
+
+real	0m0.161s
+user	0m0.468s
+sys	0m0.004s
+
+(thread_num: 8, shared_max: 500000)
+shared is: 4000000
+
+real	0m0.583s
+user	0m2.172s
+sys	0m0.012s
+
+(thread_num: 16, shared_max: 500000)
+shared is: 8000000
+
+real	0m2.796s
+user	0m10.997s
+sys	0m0.024s
+
+(thread_num: 32, shared_max: 500000)
+shared is: 16000000
+
+real	0m9.793s
+user	0m38.910s
+sys	0m0.044s
+
+(thread_num: 2, shared_max: 1000000)
+shared is: 2000000
+
+real	0m0.113s
+user	0m0.212s
+sys	0m0.000s
+
+(thread_num: 4, shared_max: 1000000)
+shared is: 4000000
+
+real	0m0.336s
+user	0m1.168s
+sys	0m0.012s
+
+(thread_num: 8, shared_max: 1000000)
+shared is: 8000000
+
+real	0m1.285s
+user	0m4.828s
+sys	0m0.016s
+
+(thread_num: 16, shared_max: 1000000)
+shared is: 16000000
+
+real	0m5.366s
+user	0m21.121s
+sys	0m0.048s
+
+(thread_num: 32, shared_max: 1000000)
+shared is: 32000000
+
+real	0m22.493s
+user	1m29.346s
+sys	0m0.044s
+
+(thread_num: 2, shared_max: 2000000)
+shared is: 4000000
+
+real	0m0.212s
+user	0m0.356s
+sys	0m0.028s
+
+(thread_num: 4, shared_max: 2000000)
+shared is: 8000000
+
+real	0m0.653s
+user	0m2.212s
+sys	0m0.020s
+
+(thread_num: 8, shared_max: 2000000)
+shared is: 16000000
+
+real	0m3.059s
+user	0m11.817s
+sys	0m0.020s
+
+(thread_num: 16, shared_max: 2000000)
+shared is: 32000000
+
+real	0m10.005s
+user	0m39.258s
+sys	0m0.036s
+
+(thread_num: 32, shared_max: 2000000)
+shared is: 64000000
+
+real	0m42.055s
+user	2m46.714s
+sys	0m0.108s
+
+(thread_num: 2, shared_max: 4000000)
+shared is: 8000000
+
+real	0m0.435s
+user	0m0.840s
+sys	0m0.016s
+
+(thread_num: 4, shared_max: 4000000)
+shared is: 16000000
+
+real	0m1.533s
+user	0m5.440s
+sys	0m0.000s
+
+(thread_num: 8, shared_max: 4000000)
+shared is: 32000000
+
+real	0m5.710s
+user	0m22.117s
+sys	0m0.024s
+
+(thread_num: 16, shared_max: 4000000)
+shared is: 64000000
+
+real	0m21.103s
+user	1m23.409s
+sys	0m0.076s
+
+(thread_num: 32, shared_max: 4000000)
+shared is: 128000000
+
+real	1m31.718s
+user	6m4.687s
+sys	0m0.228s
+
+(thread_num: 2, shared_max: 8000000)
+shared is: 16000000
+
+real	0m0.929s
+user	0m1.812s
+sys	0m0.012s
+
+(thread_num: 4, shared_max: 8000000)
+shared is: 32000000
+
+real	0m2.615s
+user	0m8.929s
+sys	0m0.024s
+
+(thread_num: 8, shared_max: 8000000)
+shared is: 64000000
+
+real	0m12.169s
+user	0m47.883s
+sys	0m0.044s
+
+(thread_num: 16, shared_max: 8000000)
+shared is: 128000000
+
+real	0m48.018s
+user	3m9.892s
+sys	0m0.288s
+
+(thread_num: 32, shared_max: 8000000)
+shared is: 256000000
+
+real	2m46.460s
+user	10m59.085s
+sys	0m0.356s
+
+
+
