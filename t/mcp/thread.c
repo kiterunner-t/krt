@@ -64,6 +64,14 @@ thread_id(thread_t *thread)
 }
 
 
+void
+thread_id_set(thread_t *thread, int id)
+{
+  assert(thread != NULL);
+  thread->id = id;
+}
+
+
 void *
 thread_arg(thread_t *thread)
 {

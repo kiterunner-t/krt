@@ -19,3 +19,9 @@ lock_tas: lock_tas.c thread.c t_lock.c
 
 lock_ttas: lock_ttas.c thread.c t_lock.c
 
+lock_a: lock_a.c thread.c t_lock.c
+	$(CC) $(CCFLAGS) -D LOCK_A -o bin/$@ $^ -lpthread
+
+lock_a_cacheline: lock_a.c thread.c t_lock.c
+	$(CC) $(CCFLAGS) -D LOCK_A -D CACHELINE=$(shell getconf LEVEL1_DCACHE_LINESIZE) -o bin/$@ $^ -lpthread
+

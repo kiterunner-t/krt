@@ -36,7 +36,12 @@ main(int argc, char **argv)
   if (threads == NULL)
     kerror("malloc threads error");
 
+#ifdef LOCK_A
+  g_lock_shared = lock_new1(thread_num + 1);
+#else
   g_lock_shared = lock_new();
+#endif
+
   if (g_lock_shared == NULL) {
     free(threads);
     kerror("lock_new error");
