@@ -29,7 +29,7 @@ main(int argc, char **argv)
 
   thread_num = atoi(argv[1]);
   shared_max = atol(argv[2]);
-  if (thread_num<2 || shared_max<10000)
+  if (thread_num<1 || shared_max<100)
     kerror("please increase the <thread_num> or <shared_max>");
 
   threads = (thread_t **) malloc(sizeof(thread_t *) * thread_num);
@@ -37,7 +37,7 @@ main(int argc, char **argv)
     kerror("malloc threads error");
 
 #ifdef LOCK_A
-  g_lock_shared = lock_new1(thread_num + 1);
+  g_lock_shared = lock_new1(thread_num);
 #else
   g_lock_shared = lock_new();
 #endif

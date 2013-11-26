@@ -33,7 +33,7 @@ void
 lock(lock_t *lock, thread_t *thread)
 {
   for ( ; ; ) {
-    while (lock->state)
+    while (lock->state == 1)
       ;
     if (__sync_val_compare_and_swap(&lock->state, 0, 1) == 0)
       return ;

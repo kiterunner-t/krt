@@ -11,6 +11,7 @@
 (global-set-key "\C-xs" 'shell)
 (global-set-key "\C-xg" 'gdb)
 (global-set-key "\C-xr" 'rename-buffer)
+(global-set-key "\C-xw" 'woman)
 
 (ido-mode 1)
 
