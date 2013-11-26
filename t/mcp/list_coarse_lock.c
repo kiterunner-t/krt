@@ -158,7 +158,7 @@ list_find(list_t *l, thread_t *thread, kitem_t item)
     n = cmp(item, cur->item);
     if (n == 0) {
       unlock(l->lock, thread);
-      return cur;
+      return cur->item;
 
     } else if (n > 0) {
       break;
@@ -168,6 +168,25 @@ list_find(list_t *l, thread_t *thread, kitem_t item)
   }
 
   unlock(l->lock, thread);
-  return NULL;
+  return KITEM_NULL;
+}
+
+
+void
+list_print(list_t *l, thread_t *thread)
+{
+  list_node_t    *cur;
+  kitem_print_pt  print = l->op->print;
+  int             cnt = 0;
+
+  lock(l->lock, thread);
+  for (cur = l->head; cur != NULL; cur = cur->next) {
+    print(cur->item);
+    printf("\n");
+    cnt++;
+  }
+
+  printf("this is list %d nodes\n", cnt);
+  unlock(l->lock, thread);
 }
 

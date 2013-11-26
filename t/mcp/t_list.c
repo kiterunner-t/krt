@@ -26,6 +26,9 @@ static void *_routine_delete(void *arg);
 static void *_routine_find(void *arg);
 
 
+static long g_notfound_cnt;
+
+
 int
 main(int argc, char **argv)
 {
@@ -52,6 +55,13 @@ main(int argc, char **argv)
     kerror("list_new error");
 
   threads[0] = thread_new(NULL, _routine_insert, (void *) &tl);
+  thread_start(threads[0]);
+
+/*
+  thread_destroy(threads[0], 1);
+  return 0;
+*/
+
   threads[1] = thread_new(NULL, _routine_delete, (void *) &tl);
   if (threads[0]==NULL || threads[1]==NULL)
     kerror("thread_new error");
@@ -62,14 +72,15 @@ main(int argc, char **argv)
       kerror("thread_new error");
   }
 
-  thread_start(threads[0]);
-  for (i = 1; i < find_thread_num+2; ++i)
+  for (i = 0; i < find_thread_num+2; ++i)
     thread_start(threads[i]);
 
   for (i = 0; i < find_thread_num+2; ++i)
     thread_destroy(threads[i], 1);
 
   list_destroy(tl.l);
+
+  printf("not found cnt: %ld\n", g_notfound_cnt);
   return EXIT_SUCCESS;
 }
 
@@ -86,11 +97,15 @@ _routine_insert(void *arg)
 
   for (i = 0; i < insert_num; ++i) {
     t = random();
+    if (t == (long) KITEM_NULL)
+      continue;
+
     ret = list_insert(tl->l, thread, (kitem_t) t);
     if (ret!=KSUCCESS && ret!=KEEXIST)
       kerror("insert error: %ld[%d]\n", t, ret);
   }
 
+  list_print(tl->l, thread);
   return NULL;
 }
 
@@ -107,6 +122,7 @@ _routine_delete(void *arg)
 
   for (i = 0; i < delete_num; ++i) {
     t = random();
+
     ret = list_delete(tl->l, thread, (kitem_t) t);
     if (ret!=KSUCCESS && ret!=KENOTFOUND)
       kerror("delete error: %ld\n", t);
@@ -124,11 +140,18 @@ _routine_find(void *arg)
   long      find_num = tl->find_num;
   long      t;
   long      i;
+  kitem_t   result;
 
   for (i = 0; i < find_num; ++i) {
     t = random();
-    (void) list_find(tl->l, thread, (kitem_t) t);
+
+    result = list_find(tl->l, thread, (kitem_t) t);
+    if (result == KITEM_NULL)
+      g_notfound_cnt++;
   }
+
+  printf("%ld in find routine\n", g_notfound_cnt);
+  fflush(stdout);
 
   return NULL;
 }

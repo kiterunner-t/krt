@@ -27,7 +27,7 @@ thread_new(pthread_attr_t *attr, thread_start_pt start, void *arg)
   if (thread == NULL)
     return NULL;
 
-  thread->id = id;
+  thread->id = id++;
   thread->arg = arg;
   thread->attr = attr;
   thread->start = start;

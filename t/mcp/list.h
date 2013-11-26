@@ -18,6 +18,7 @@ extern void      list_destroy(list_t *l);
 extern kerrno_t  list_insert(list_t *l, thread_t *thread, kitem_t item);
 extern kerrno_t  list_delete(list_t *l, thread_t *thread, kitem_t item);
 extern kitem_t   list_find(list_t *l, thread_t *thread, kitem_t item);
+extern void      list_print(list_t *l, thread_t *thread);
 
 
 #endif

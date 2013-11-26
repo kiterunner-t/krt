@@ -9,7 +9,7 @@
 #include "kitem.h"
 
 #undef KITEM_NULL
-#define KITEM_NULL   LONG_MIN
+#define KITEM_NULL   ((kitem_t) LONG_MIN)
 
 
 extern kitem_op_t g_long_op;
