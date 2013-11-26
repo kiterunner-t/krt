@@ -1,5 +1,6 @@
+VPATH = ../alg/src ../alg/include
 CC = gcc
-CCFLAGS = -g -Wall -I ../../lib/include
+CCFLAGS = -g -Wall -I ../../lib/include -I ../alg/include
 
 
 all: t_lock_no lock_pthread_mutex lock_peterson lock_tas lock_ttas
@@ -25,3 +26,4 @@ lock_a: lock_a.c thread.c t_lock.c
 lock_a_cacheline: lock_a.c thread.c t_lock.c
 	$(CC) $(CCFLAGS) -D LOCK_A -D CACHELINE=$(shell getconf LEVEL1_DCACHE_LINESIZE) -o bin/$@ $^ -lpthread
 
+list_coarse_lock: t_list.c list_coarse_lock.c thread.c lock_pthread_mutex.c kitem_long.c
