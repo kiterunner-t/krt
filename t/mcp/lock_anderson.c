@@ -5,41 +5,39 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include "katomic.h"
 #include "lock.h"
 #include "thread.h"
 
 /* #define CACHELINE 64 sysconf(_SC_LEVEL1_DCACHE_LINESIZE) */
 
-typedef struct cacheline_s cacheline_t;
-
-
-struct cacheline_s {
-  int  num;
+typedef union {
+  long num;
 
 #ifdef CACHELINE
-  char pad[CACHELINE-sizeof(int)];
+  char pad[CACHELINE];
 #endif
-};
+} cacheline_u;
+
 
 struct lock_s {
-  int         tail;
-  int         size;
-  cacheline_t flag[1];
+  katomic_t   tail;
+  long        size;
+  cacheline_u flag[1];
 };
 
 
 lock_t *
-lock_new1(int size)
+lock_new1(long size)
 {
   lock_t *l;
 
-  l = (lock_t *) malloc(sizeof(*l) + size * sizeof(cacheline_t));
+  l = (lock_t *) malloc(sizeof(*l) + size * sizeof(cacheline_u));
   if (l == NULL)
     return NULL;
 
   l->size = size;
   l->tail = 0;
-  memset(l->flag, 0, size * sizeof(cacheline_t));
   l->flag[0].num = 1;
   return l;
 }
@@ -56,9 +54,10 @@ lock_destroy(lock_t *l)
 void
 lock(lock_t *l, thread_t *t)
 {
-  int slot;
+  long slot;
 
-  slot = __sync_fetch_and_add(&(l->tail), 1) % l->size;
+  slot = katomic_fetch_add(&(l->tail), 1);
+  slot %= l->size;
   thread_id_set(t, slot);
 
   while (l->flag[slot].num == 0)
@@ -69,7 +68,7 @@ lock(lock_t *l, thread_t *t)
 void
 unlock(lock_t *l, thread_t *t)
 {
-  int slot;
+  long slot;
 
   slot = thread_id(t);
   l->flag[slot].num = 0;

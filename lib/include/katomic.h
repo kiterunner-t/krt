@@ -6,7 +6,14 @@
 #define KATOMIC_H_
 
 
-#define kbarrier() __asm__ __volatile__("" : : : "memory")
+#if (KUSE_GCC_ATOMIC)
+# include "katomic_gcc.h"
+#else
+# error "unknown atomic"
+#endif
+
+
+// #define kbarrier() __asm__ __volatile__("" : : : "memory")
 
 
 #endif

@@ -3,11 +3,12 @@
  */
 
 #include <stdlib.h>
+#include "katomic.h"
 #include "lock.h"
 
 
 struct lock_s {
-  volatile int state;
+  katomic_t state;
 };
 
 
@@ -32,7 +33,7 @@ lock_destroy(lock_t *lock)
 void
 lock(lock_t *lock, thread_t *thread)
 {
-  while (__sync_val_compare_and_swap(&lock->state, 0, 1))
+  while (katomic_cmp_set(&lock->state, 0, 1))
     ;
 }
 

@@ -12,7 +12,7 @@ typedef struct lock_s lock_t;
 
 
 extern lock_t *lock_new();
-extern lock_t *lock_new1(int capacity); /* for alock */
+extern lock_t *lock_new1(long capacity); /* for alock */
 extern void    lock_destroy(lock_t *lock);
 
 extern void    lock(lock_t *lock, thread_t *thread);

@@ -21,15 +21,15 @@ main(int argc, char **argv)
 {
   thread_t **threads;
   int        i;
-  int        thread_num;
+  long       thread_num;
   long       shared_max;
 
   if (argc != 3)
     kerror("Usage: %s <thread_num> <shared_max>", argv[0]);
 
-  thread_num = atoi(argv[1]);
+  thread_num = atol(argv[1]);
   shared_max = atol(argv[2]);
-  if (thread_num<1 || shared_max<100)
+  if (thread_num<1 || shared_max<2)
     kerror("please increase the <thread_num> or <shared_max>");
 
   threads = (thread_t **) malloc(sizeof(thread_t *) * thread_num);
