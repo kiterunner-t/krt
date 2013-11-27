@@ -7,7 +7,7 @@
 
 
 struct lock_s {
-  int state;
+  volatile int state;
 };
 
 
