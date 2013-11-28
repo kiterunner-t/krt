@@ -6,11 +6,6 @@
 #define KITEM_H_
 
 
-#ifndef KITEM_NULL
-# define KITEM_NULL       NULL
-#endif
-
-
 typedef void              *kitem_t;
 typedef void              *kkey_t;
 typedef struct kitem_op_s  kitem_op_t;
@@ -28,6 +23,15 @@ struct kitem_op_s {
   kitem_print_pt    print;
   kitem_free_pt     free;
 };
+
+
+#ifdef KITEM_LONG
+# include "kitem_long.h"
+#elif KITEM_STRING
+# include "kitem_string.h"
+#else
+# error "not support kitem"
+#endif
 
 
 #endif

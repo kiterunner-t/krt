@@ -6,7 +6,7 @@
 #define KITEM_INT_H_
 
 #include <limits.h>
-#include "kitem.h"
+
 
 #undef KITEM_NULL
 #define KITEM_NULL   ((kitem_t) LONG_MIN)
