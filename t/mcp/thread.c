@@ -10,6 +10,7 @@
 
 struct thread_s {
   int              id;
+  void            *local;
   pthread_t        pthread;
   pthread_attr_t  *attr;
   thread_start_pt  start;
@@ -28,6 +29,7 @@ thread_new(pthread_attr_t *attr, thread_start_pt start, void *arg)
     return NULL;
 
   thread->id = id++;
+  thread->local = NULL;
   thread->arg = arg;
   thread->attr = attr;
   thread->start = start;
@@ -77,5 +79,18 @@ thread_arg(thread_t *thread)
 {
   assert(thread != NULL);
   return thread->arg;
+}
+
+
+void *
+thread_local(thread_t *thread, size_t size)
+{
+  if (thread->local == NULL) {
+    thread->local = malloc(size);
+    if (thread->local == NULL)
+      return NULL;
+  }
+
+  return thread->local;
 }
 

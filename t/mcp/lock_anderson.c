@@ -12,7 +12,7 @@
 /* #define CACHELINE 64 sysconf(_SC_LEVEL1_DCACHE_LINESIZE) */
 
 typedef union {
-  long num;
+  volatile int num;
 
 #ifdef CACHELINE
   char pad[CACHELINE];
@@ -54,13 +54,14 @@ lock_destroy(lock_t *l)
 void
 lock(lock_t *l, thread_t *t)
 {
-  long slot;
+  long         slot;
+  cacheline_u *c;
 
-  slot = katomic_fetch_add(&(l->tail), 1);
-  slot %= l->size;
+  slot = katomic_fetch_add(&(l->tail), 1) % l->size;
   thread_id_set(t, slot);
 
-  while (l->flag[slot].num == 0)
+  c = &(l->flag[slot]);
+  while (c->num == 0)
     ;
 }
 

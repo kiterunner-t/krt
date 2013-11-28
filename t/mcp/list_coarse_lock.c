@@ -3,7 +3,6 @@
  */
 
 #include <stdlib.h>
-#include <pthread.h>
 #include "kmisc.h"
 #include "kitem.h"
 #include "lock.h"
