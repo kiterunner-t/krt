@@ -26,4 +26,9 @@ lock_anderson: lock_anderson.c thread.c t_lock.c
 lock_anderson_cacheline: lock_anderson.c thread.c t_lock.c
 	$(CC) $(CCFLAGS) -D LOCK_A -D CACHELINE=$(shell getconf LEVEL1_DCACHE_LINESIZE)  -D KUSE_GCC_ATOMIC -o bin/$@ $^ -lpthread
 
+
 list_coarse_lock: t_list.c list_coarse_lock.c thread.c lock_pthread_mutex.c kitem_long.c
+
+list_fine_lock: t_list.c list_fine_lock.c thread.c lock_pthread_mutex.c kitem_long.c
+
+ut_list: ut_list.c list_fine_lock.c thread.c lock_pthread_mutex.c kitem_long.c

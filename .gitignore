@@ -2,3 +2,4 @@ packages/*
 *.o
 */*/bin/*
 TAGS
+bin
