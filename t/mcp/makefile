@@ -14,7 +14,12 @@ t_lock_no: thread.c t_lock_no.c
 
 lock_pthread_mutex: lock_pthread_mutex.c thread.c t_lock.c
 
+lock_peterson2: lock_peterson.c thread.c t_lock.c
+	$(CC) -g -Wall -D KUSE_GCC_ATOMIC -I ../../lib/include -I ../alg/include -o bin/$@ $^ -lpthread
+
 lock_peterson: lock_peterson.c thread.c t_lock.c
+	$(CC) -g -Wall -I ../../lib/include -I ../alg/include -o bin/$@ $^ -lpthread
+
 
 lock_tas: lock_tas.c thread.c t_lock.c
 

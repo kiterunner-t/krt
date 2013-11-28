@@ -6,6 +6,10 @@
 #include "thread.h"
 #include "lock.h"
 
+#ifdef KUSE_GCC_ATOMIC
+# include "katomic.h"
+#endif
+
 
 struct lock_s {
   int flag[2];
@@ -49,6 +53,10 @@ lock(lock_t *l, thread_t *thread)
   j = 1 - i;
   l->flag[i] = 1;
   l->victim = i;
+
+#ifdef KUSE_GCC_ATOMIC
+  kbarrier();
+#endif
 
   while (l->flag[j] && l->victim==i)
     ; // spin
