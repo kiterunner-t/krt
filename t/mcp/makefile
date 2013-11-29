@@ -36,7 +36,7 @@ list_coarse_lock: t_list.c list_coarse_lock.c thread.c lock_pthread_mutex.c kite
 
 list_fine_lock: t_list.c list_fine_lock.c thread.c lock_pthread_mutex.c kitem_long.c
 
-list_optimistic_lock: ut_list.c list_optimistic_lock.c thread.c lock_pthread_mutex.c kitem_long.c
+list_optimistic_lock: t_list.c list_optimistic_lock.c thread.c lock_pthread_mutex.c kitem_long.c
 
-ut_list: ut_list.c list_fine_lock.c thread.c lock_pthread_mutex.c kitem_long.c
+ut_list: ut_list.c list_optimistic_lock.c thread.c lock_pthread_mutex.c kitem_long.c
 
