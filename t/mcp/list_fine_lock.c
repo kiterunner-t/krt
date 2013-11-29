@@ -24,11 +24,14 @@ struct list_s {
   kitem_op_t  *op;
   list_node_t *head;
   list_node_t *dummy;
+  list_node_t *free;
+  lock_t      *freelock;
 };
 
 
-static void _list_free_node(list_t *l, list_node_t *node);
+static void _list_free_node(list_t *l, thread_t *thread, list_node_t *node);
 static list_node_t *_list_new_node(kitem_t item, list_node_t *next);
+static void _list_destroy_node(list_t *l, list_node_t *node);
 
 
 list_t *
@@ -48,8 +51,17 @@ list_new(kitem_op_t *op)
 
   l->head = _list_new_node(KITEM_NULL, l->dummy);
   if (l->head == NULL) {
+    _list_destroy_node(l, l->dummy);
     free(l);
-    _list_free_node(l, l->dummy);
+    return NULL;
+  }
+
+  l->free = NULL;
+  l->freelock = lock_new();
+  if (l->freelock == NULL) {
+    _list_destroy_node(l, l->head);
+    _list_destroy_node(l, l->dummy);
+    free(l);
     return NULL;
   }
 
@@ -68,21 +80,44 @@ list_destroy(list_t *l)
   while (l->head != NULL) {
     node = l->head;
     l->head = node->next;
-    _list_free_node(l, node);
+    _list_destroy_node(l, node);
   }
 
+  while (l->free != NULL) {
+    node = l->free;
+    l->free = node->next;
+    lock_destroy(node->lock);
+    free(node);
+  }
+
+  lock_destroy(l->freelock);
   free(l);
 }
 
 
 static void
-_list_free_node(list_t *l, list_node_t *node)
+_list_free_node(list_t *l, thread_t *thread, list_node_t *node)
 {
-  lock_destroy(node->lock);
-  node->lock = NULL;
-  node->next = NULL;
+  list_node_t **p = &l->free;
+
+  lock(l->freelock, thread);
+
   if (l->op->free != NULL)
     l->op->free(node->item);
+  node->next = l->free;
+  *p = node;
+
+  unlock(l->freelock, thread);
+}
+
+
+static void
+_list_destroy_node(list_t *l, list_node_t *node)
+{
+  lock_destroy(node->lock);
+  if (l->op->free != NULL)
+    l->op->free(node->item);
+  node->next = NULL;
   free(node);
 }
 
@@ -187,13 +222,11 @@ list_delete(list_t *l, thread_t *thread, kitem_t item)
     if (n == 0) {
       prev->next = cur->next;
       cur->next = NULL;
-      unlock(cur->lock, thread);
-      _list_free_node(l, cur);
-      unlock(prev->lock, thread);
-      return KSUCCESS;
+      _list_free_node(l, thread, cur);
+      ret = KSUCCESS;
+      break;
 
     } else if (n > 0) {
-      ret = KENOTFOUND;
       break;
     }
 

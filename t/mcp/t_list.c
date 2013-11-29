@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
+#include "katomic.h"
 #include "kmisc.h"
 #include "kitem.h"
 #include "kitem_long.h"
@@ -26,8 +27,8 @@ static void *_routine_delete(void *arg);
 static void *_routine_find(void *arg);
 
 
-static long g_notfound_cnt;
-static long g_found_cnt;
+static katomic_t g_notfound_cnt;
+static katomic_t g_found_cnt;
 
 
 int
@@ -68,7 +69,7 @@ main(int argc, char **argv)
       kerror("thread_new error");
   }
 
-  for (i = 0; i < find_thread_num+2; ++i)
+  for (i = 1; i < find_thread_num+2; ++i)
     thread_start(threads[i]);
 
   for (i = 0; i < find_thread_num+2; ++i)
@@ -144,9 +145,9 @@ _routine_find(void *arg)
 
     result = list_find(tl->l, thread, (kitem_t) t);
     if (result == KITEM_NULL)
-      g_notfound_cnt++;
+      katomic_fetch_add(&g_notfound_cnt, 1);
     else
-      g_found_cnt++;
+      katomic_fetch_add(&g_found_cnt, 1);
   }
 
   return NULL;

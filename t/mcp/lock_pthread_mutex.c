@@ -22,7 +22,7 @@ lock_new()
   if (l == NULL)
     return NULL;
 
-  if (pthread_mutex_init(&(l->mutex), NULL) < 0) {
+  if (pthread_mutex_init(&l->mutex, NULL) < 0) {
     free(l);
     return NULL;
   }
@@ -34,7 +34,7 @@ lock_new()
 void
 lock_destroy(lock_t *l)
 {
-  pthread_mutex_destroy(&(l->mutex));
+  pthread_mutex_destroy(&l->mutex);
   free(l);
 }
 
