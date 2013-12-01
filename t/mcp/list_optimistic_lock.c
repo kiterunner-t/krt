@@ -16,7 +16,7 @@ list_insert(list_t *l, thread_t *thread, kitem_t item)
   list_node_t  *cur;
   list_node_t  *node;
   kerrno_t      ret = KSUCCESS;
-  long          n;
+  long          n = -1;
   kitem_cmp_pt  cmp = l->op->cmp;
 
   while (1) {
@@ -58,7 +58,7 @@ list_delete(list_t *l, thread_t *thread, kitem_t item)
   list_node_t  *dummy = l->dummy;
   list_node_t  *prev;
   list_node_t  *cur;
-  long          n;
+  long          n = -1;
   kitem_cmp_pt  cmp = l->op->cmp;
 
   while (1) {
@@ -98,7 +98,7 @@ list_find(list_t *l, thread_t *thread, kitem_t item)
   list_node_t  *prev;
   list_node_t  *cur;
   kitem_t       ret = KITEM_NULL;
-  long          n;
+  long          n = -1;
   kitem_cmp_pt  cmp = l->op->cmp;
 
   while (1) {
