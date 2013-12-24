@@ -8,10 +8,9 @@
 #include <stdlib.h>
 #include "kitem.h"
 
-#undef KITEM_NULL
-#define KITEM_NULL            NULL
+#define KITEM_STRING_NULL       NULL
 
-#define KSTRING_INVALID_LEN  -1
+#define KSTRING_INVALID_LEN    -1
 
 
 typedef struct kstring_s kstring_t;

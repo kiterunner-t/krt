@@ -197,7 +197,7 @@ avl_tree_delete(avl_tree_t *avl, kitem_t item)
 
   if (avl == NULL)
     return KEINVALID_PARAM;
-  if (avl->size==0 || item==KITEM_NULL)
+  if (avl->size==0 || item==avl->op->null)
     return KENOTFOUND;
 
   ret = _r_avl_tree_delete(avl, item, &avl->root);
@@ -309,7 +309,7 @@ kitem_t
 avl_tree_search(avl_tree_t *avl, kkey_t key)
 {
   if (avl==NULL || avl->size==0)
-    return KITEM_NULL;
+    return avl->op->null;
 
   return _r_avl_tree_search(avl, key, avl->root);
 }
@@ -321,7 +321,7 @@ _r_avl_tree_search(avl_tree_t *avl, kkey_t key, avl_node_t *root)
   long n;
 
   if (root == NULL)
-    return KITEM_NULL;
+    return avl->op->null;
 
   n = avl->op->cmp_key1(root->item, key);
   if (n == 0)

@@ -15,6 +15,8 @@ static inline void string_free(kitem_t item);
 
 
 kitem_op_t g_string_op = {
+  KITEM_STRING_NULL,
+
   string_cmp,
   string_cmp_key1,
   string_print,

@@ -41,7 +41,7 @@ st_init(kitem_op_t *op)
   if (op == NULL)
     return KEINVALID_PARAM;
 
-  g_head = _st_bst_new_node(KITEM_NULL, NULL, NULL, 0);
+  g_head = _st_bst_new_node(op->null, NULL, NULL, 0);
   if (g_head == NULL)
     return KEMEM;
 
@@ -92,7 +92,7 @@ _st_bst_destroy(st_bst_node_t *root)
   stack_t        *stack;
 
   // hypothesis: all calls for the stack would not be failed
-  stack = stack_init(128);
+  stack = stack_init(128, g_item_op->null);
   (void) stack_push(stack, &g_dummy);
   for (pcur = &root; *pcur != g_dummy; ) {
     if ((*pcur)->left==g_dummy && (*pcur)->right==g_dummy) {
@@ -246,7 +246,7 @@ kitem_t
 st_search(kkey_t key)
 {
   if (g_head == g_dummy)
-    return KITEM_NULL;
+    return g_item_op->null;
 
 #ifdef RECURSION
   return _r_st_bst_search(g_head, key);
@@ -262,7 +262,7 @@ _r_st_bst_search(st_bst_node_t *root, kkey_t key)
   long n;
   
   if (root == g_dummy)
-    return KITEM_NULL;
+    return g_item_op->null;
   
   n = g_item_op->cmp_key1(root->item, key);
   if (n == 0)
@@ -290,7 +290,7 @@ _st_bst_search(st_bst_node_t *root, kitem_t key)
       cur = cur->left;
   }
 
-  return KITEM_NULL;
+  return g_item_op->null;
 }
 
 

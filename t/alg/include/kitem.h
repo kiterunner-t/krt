@@ -18,20 +18,13 @@ typedef void (*kitem_free_pt)(kitem_t item);
 
 
 struct kitem_op_s {
+  kitem_t           null;
+
   kitem_cmp_pt      cmp;
   kitem_cmp_key1_pt cmp_key1;
   kitem_print_pt    print;
   kitem_free_pt     free;
 };
-
-
-#ifdef KITEM_LONG
-# include "kitem_long.h"
-#elif KITEM_STRING
-# include "kitem_string.h"
-#else
-# error "not support kitem"
-#endif
 
 
 #endif

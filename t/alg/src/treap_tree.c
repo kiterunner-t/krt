@@ -56,7 +56,7 @@ treap_tree_init(kitem_op_t *op)
   dummy = &treap->dummy;
   dummy->left = dummy;
   dummy->right = dummy;
-  dummy->item = KITEM_NULL;
+  dummy->item = op->null;
   dummy->priority = KRAND_MAX;
   treap->root = dummy;
   treap->size = 0;
@@ -223,7 +223,7 @@ kitem_t
 treap_tree_search(treap_tree_t *treap, kkey_t key)
 {
   if (treap == NULL)
-    return KITEM_NULL;
+    return treap->op->null;
 
   return _r_treap_tree_search(treap, treap->root, key);
 }
@@ -235,7 +235,7 @@ _r_treap_tree_search(treap_tree_t *treap, treap_node_t *root, kkey_t key)
   long n;
 
   if (root == &treap->dummy)
-    return KITEM_NULL;
+    return treap->op->null;
 
   n = treap->op->cmp_key1(root->item, key);
   if (n == 0)

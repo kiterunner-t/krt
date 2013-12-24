@@ -13,6 +13,8 @@ static inline void long_print(kitem_t item);
 
 
 kitem_op_t g_long_op = {
+  KITEM_LONG_NULL,
+
   long_cmp,
   long_cmp_key1,
   long_print,

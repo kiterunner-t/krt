@@ -11,12 +11,13 @@
 struct stack_s {
   size_t  top;
   size_t  capacity;
+  kitem_t null;
   kitem_t items[1];
 };
 
 
 stack_t *
-stack_init(size_t capacity)
+stack_init(size_t capacity, kitem_t null)
 {
   stack_t *stack;
 
@@ -29,6 +30,7 @@ stack_init(size_t capacity)
 
   stack->top = -1;
   stack->capacity = capacity;
+  stack->null = null;
   return stack;
 }
 
@@ -45,7 +47,7 @@ kitem_t
 stack_peek(stack_t *s)
 {
   if (s->top < 0)
-    return KITEM_NULL;
+    return s->null;
 
   return s->items[s->top];
 }
@@ -55,7 +57,7 @@ kitem_t
 stack_pop(stack_t *s)
 {
   if (s->top < 0)
-    return KITEM_NULL;
+    return s->null;
 
   return s->items[s->top--];
 }
