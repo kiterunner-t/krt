@@ -67,10 +67,15 @@ bak_files() {
 get_lastmonth() {
   local _today=$1
   local _today_month=$(echo $_today | cut -b 5-6)
-  local _today_year=$(echo $_today | cut -b 1-4)
-  local _t=$(expr $_today_month + 11)
+  local _year=$(echo $_today | cut -b 1-4)
+  local _t=$(expr $_today_month - 1)
 
-  printf "%04d%02d" $(expr $_today_year - 1 + $_t / 12) $(expr $_t % 12)
+  if [ $_t -eq 0 ]; then
+    _year=$(expr $_year - 1)
+    _t=12
+  fi
+
+  printf "%04d%02d" $_year $_t
 }
 
 
