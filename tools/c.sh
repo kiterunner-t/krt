@@ -1,6 +1,12 @@
-#n
-# Copyleft (C) KRT, 2013 by kiterunner_t
-# sed -f c.sed *.c
+#! /bin/bash
+# Copyleft (C) KRT, 2013-2014 by kiterunner_t
+
+if [ $# -ne 1 ]; then
+  echo "Usage: $(basename $0) <c-file>"
+  exit 1
+fi
+
+_FILE=$1
 
 # produce the declaration of the static function in .c
 # cause I'm not skilled in emacs lisp for now
@@ -19,16 +25,17 @@
 # not support, I don't use the style
 #   static void test() {
 #   }
+sed -n '
+  /^static .*[^;]\s*$/ {
+  :AGAIN
+    N
+    /{$/!b AGAIN
 
-/^static .*[^;]\s*$/ {
-:AGAIN
-  N
-  /{$/!b AGAIN
-
-  s/{$//
-  s/\n/ /
-  s/\* \(.*\)(/*\1(/
-  s/\n*\s*$/;/
-  p
-}
+    s/{$//
+    s/\n/ /
+    s/\* \(.*\)(/*\1(/
+    s/\n*\s*$/;/
+    p
+  }
+' $_FILE
 
