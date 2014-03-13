@@ -14,3 +14,13 @@ main(void)
   return 0;
 }
 
+
+/*
+OUTPUT:
+
+    w: ffffffff
+w<<32: ffffffff
+w<< 1: fffffffe
+w<<33: fffffffe
+*/
+
