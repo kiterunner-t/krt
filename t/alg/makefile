@@ -13,7 +13,8 @@ ALL_OBJS  = test_redblack_tree \
             test_treap_tree \
             test_avl_tree \
             test_st_bst \
-            test_kd_tree
+            test_kd_tree \
+            test_binary_heap
 
 ITEM_SRC = kitem_long.c kitem_string.c kitem.h kitem_long.h kitem_string.h \
            kmisc.h
@@ -48,6 +49,8 @@ test_avl_tree: test_avl_tree.c avl_tree.c  $(ITEM_SRC)
 test_st_bst: test_st.c st_bst.c st.h st_bst.h stack_array.c stack.h $(ITEM_SRC)
 
 test_kd_tree: test_kd_tree.c kd_tree.c kd_tree.h $(ITEM_SRC)
+
+test_binary_heap: test_binary_heap.c binary_heap.c binary_heap.h $(ITEM_SRC)
 
 
 clean:
