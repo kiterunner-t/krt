@@ -5,7 +5,7 @@ use strict;
 use warnings;
 use Getopt::Long;
 use Encode qw/encode decode/;
-#use Data::Dumper;
+use Data::Dumper;
 
 sub utf8_to_gbk($);
 
@@ -29,14 +29,14 @@ my $file_in = $ARGV[0];
 
 open my $fh, "<", $file_in or die "open error: $!";
 
-my $table_part;
+my $table_part = 0;
 my %table;
 my $current_table;
 
 while (<$fh>) {
   chomp;
 
-  if (/^\s*create table\s+"(\w+?)"\."(\w+?)"/i) {
+  if (/^\s*CREATE TABLE\s+"(\w+?)\s*"\."(\w+?)\s*"/i) {
     $table_part = 1;
     $current_table = $2;
     $table{$current_table}{schema} = $1;
@@ -45,39 +45,41 @@ while (<$fh>) {
     next;
   }
 
-  if (/^\s*\)\s* (?: segment.* | tablespace.* | ;)*\s*$/ix) {
+  if ($table_part && /^\s* \) \s* (?: segment.* | tablespace.* | ;)* \s* $/ix) {
     $table_part = 0;
     next;
   }
 
-  if (/\s*COMMENT \s+ ON \s+ TABLE \s+ "\w+?"\s*\.\s*"(\w+?)" \s+ IS 
-      \s+ '(.*)'\s*;\s*$/ix
+  if (/\s*COMMENT \s+ ON \s+ TABLE \s+ ".+?"\s*\.\s*"(\w+?) \s*" \s+ IS 
+      \s+ '(.*) \s*'\s*;\s*$/ix
   ) {
     $table{$1}{name_ch} = $2;
     next;
   }
 
   if (/\s*COMMENT \s+ ON \s+ COLUMN \s+ 
-      "\w+?" \s* \. \s* "(\w+?)" \s* \. \s* "(\w+?)" \s+ IS 
-      \s+ '(.*)'\s*;\s*$/ix
+      ".+?" \s* \s* \. \s* "(.+?)" \s* \. \s* "(.+?)" \s+ IS 
+      \s+ '(.*)' \s* ; \s* $/ix
   ) {
     $table{$1}{field}{$2}{comment} = $3;
     next;
   }
 
   if ($table_part) {
-    if (/primary \s+ key\s+\("(\w+?)"\)/ix) {
+    if (/primary \s+ key\s+\("(\.+?)"\)/ix) {
       $table{$current_table}{field}{$1}{primary_key} = "Y";
       next;
     }
 
     my $not_null = "";
+    $table_part = 0 if /\)\s*$/;
 
-    if (/^\s*\(*\s*
-        "(\w+)"                    # field_name
-        \s+(\w+)                   # field_type
-        (?:  \( (.+?) \) )*        # field_length [optional]
-        \s*(not \s null(?{ $not_null = "NOT NULL" }))*.*,*$/ix
+    if (/^\s* \(* \s*
+        "(\w+) \s*"                                        # field_name
+        \s+(\w+)                                           # field_type
+        (?: \( ([\w,]+?) \) )*                             # field_length [optional]
+        \s+ (NOT \s+ NULL (?{ $not_null = "NOT NULL" }) )* # NOT NULL
+        /ix
     ) {
       my $field_name = $1;
 
@@ -93,6 +95,8 @@ while (<$fh>) {
     }
   }
 }
+
+# print Dumper %table;
 
 close $fh;
 
