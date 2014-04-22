@@ -1,24 +1,39 @@
 #! /usr/bin/env perl
 # Copyleft (C) KRT, 2014 by kiterunner_t
+# ref: http://www.kiterunner.me/?p=427
 
 use warnings;
 use strict;
 use Getopt::Long;
+use Encode;
 use Win32::OLE qw(in);
 use Win32::OLE::Const 'Microsoft Word';
+use Data::Dumper;
 
 
 my $debug;
 my $verbose;
 my $out_file;
+my $out_path = "";
+my $picture_format = "png";
 
 GetOptions(
-    "verbose|v+" => \$verbose,
-    "debug|d+"   => \$debug,
-    "output|o=s" => \$out_file,
+    "verbose|v+"         => \$verbose,
+    "debug|d+"           => \$debug,
+    "output|o=s"         => \$out_file,
+    "path|p=s"           => \$out_path,
+    "picture-format|f=s" => \$picture_format,
 );
 
-die "Usage: perl word_to_md.pl [-d] [-o out_file.md] xx.docx" unless @ARGV == 1;
+die <<"_EOF_"
+Usage: perl word_to_md.pl [options] xx.docx
+    -d                 <debug option>
+    -o out-file.md
+    -p picture-path
+    -f picture-format
+_EOF_
+  unless @ARGV == 1;
+
 my $file = $ARGV[0];
 my $file_withpath = Win32::GetCwd() . "/$file" if $file !~ /^(\w:)?[\/\\]/;
 die "file $file does not exist" unless -f $file_withpath;
@@ -49,7 +64,7 @@ unless (defined $doc) {
   $doc = $word->Documents->Open($file_withpath);
 }
 
-my %Style = (
+my %style = (
   BlockQuotation => $doc->Styles(wdStyleBlockQuotation)->NameLocal,
   BodyText => $doc->Styles(wdStyleBodyText)->NameLocal,
   BodyText2 => $doc->Styles(wdStyleBodyText2)->NameLocal,
@@ -185,37 +200,137 @@ my %Style = (
 );
 
 if ($debug) {
-  foreach my $s (sort keys %Style) {
-    print $fd "$s ---> $Style{$s}\n";
+  foreach my $s (sort keys %style) {
+    print $fd "$s ---> $style{$s}\n";
   }
 }
 
+
+sub is_table($) {
+  my ($start) = @_;
+
+  foreach my $table (in $doc->Tables) {
+    if ($table->range->start == $start) {
+      return $table->range->end;
+    }
+  }
+
+  0;
+}
+
+
+sub is_shape($) {
+  my ($start) = @_;
+
+  foreach my $shape (in $doc->InlineShapes) {
+    if ($shape->range->start == $start) {
+      return $shape->range->end;
+    }
+  }
+
+  0;
+}
+
+
+sub utf8_to_gbk($) {
+  my ($str) = @_;
+
+  encode "gbk", decode("utf-8", $str);
+}
+
+
+sub gbk_to_utf8($) {
+  my ($str) = @_;
+
+  encode "utf-8", decode("gbk", $str);
+}
+
+
+my $last_end = 0;
+my $ref_num = 0;
+my $begin_indent = 0;
+my $last_indent = 0;
+my $indent;
+my @refs;
 foreach my $paragraph (in $doc->Paragraphs) {
-  my $Style = $paragraph->Format->Style->NameLocal;
-  my $Text = $paragraph->Range->Text;
+  my $start = $paragraph->Range->start;
+  my $end = $paragraph->Range->end;
+
+  next if $start < $last_end;
+
+  if ($last_end = is_table($start)) {
+    next;
+  } elsif ($last_end = is_shape($start)) {
+    next;
+  }
+
+  my $style = $paragraph->Format->Style->NameLocal;
+  my $text = $paragraph->Range->Text;
+  my $left_indent = int($paragraph->Format->LeftIndent);
 
   if ($debug) {
-    print $fd $Style;
+    print $fd "[$start -> $end] ";
+    print $fd "style --> " . $paragraph->Format->Style->Type . "-----";
+
+    print $fd $style . "\n";
+    print $fd "[debug] " . $text . "\n";
   }
 
-  if ($Style eq $Style{Title}) {
+  if ($style eq $style{Title}) {
     # ignore
 
-  } elsif ($Style eq $Style{Heading1}) {
-    print $fd "# $Text";
+  } elsif ($style eq $style{Heading1}) {
+    print $fd "# $text";
 
-  } elsif ($Style eq $Style{Heading2}) {
-    print $fd "## $Text";
+  } elsif ($style eq $style{Heading2}) {
+    print $fd "## $text";
 
-  } elsif ($Style eq $Style{ListParagraph}) {
-    print $fd "+ $Text";
+  } elsif ($style eq $style{Heading3}) {
+    print $fd "### $text";
 
-  } elsif ($Style eq $Style{NormalObject}) {
-    print $fd "    $Text";
+  } elsif ($style eq $style{ListParagraph}) {
+    if ($last_indent == 0) {
+      print $fd "\n";
+      $begin_indent = $left_indent;
+    } elsif ($last_indent < $left_indent) {
+      print $fd "\n";
+    } elsif ($last_indent > $left_indent) {
+      print $fd "\n";
+    }
+
+    $indent = int(($left_indent - $begin_indent) / 28) * 4;
+    $last_indent = $left_indent;
+    print $fd " " x $indent . "* $text";
+
+  } elsif ($style eq $style{NormalObject}) {
+    print $fd "    $text";
+
+  } elsif ($style eq $style{Emphasis}) {
+    print $fd "**$text**";
+
+  } elsif ($style eq $style{Caption}) {
+    my $table_cn = utf8_to_gbk "表格";
+    my $picture_cn = utf8_to_gbk "图";
+
+    if ($text =~ /^\s*(?:$table_cn|$picture_cn)\s*\d+\s+(.*)$/) {
+      my $name = $1;
+      $name =~ s/[\r\n]//g;
+      $ref_num++;
+      push @refs, $name;
+      print $fd "\n![$name][$ref_num]\n";
+    }
 
   } else {
-    print $fd $Text;
+    print $fd $text;
   }
+}
+
+my $num = 0;
+$out_path =~ s/\/*$/\// if ! $out_path eq "";
+print $fd "\n";
+foreach my $ref (@refs) {
+  $num++;
+  print $fd "[$num]: $out_path" . "$ref.$picture_format \"$ref\"\n";
 }
 
 close $fd;
