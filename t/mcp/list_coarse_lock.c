@@ -167,7 +167,7 @@ list_find(list_t *l, thread_t *thread, kitem_t item)
   }
 
   unlock(l->lock, thread);
-  return KITEM_NULL;
+  return l->op->null;
 }
 
 

@@ -97,7 +97,7 @@ list_find(list_t *l, thread_t *thread, kitem_t item)
   list_node_t  *dummy = l->dummy;
   list_node_t  *prev;
   list_node_t  *cur;
-  kitem_t       ret = KITEM_NULL;
+  kitem_t       ret = l->op->null;
   long          n = -1;
   kitem_cmp_pt  cmp = l->op->cmp;
 

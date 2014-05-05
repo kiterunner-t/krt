@@ -78,7 +78,7 @@ _routine_insert1(void *arg)
     list_delete(l, thread, (kitem_t) t[i]);
 
     result = list_find(l, thread, (kitem_t) t[i]);
-    if ((long) result != (long) KITEM_NULL)
+    if ((long) result != (long) KITEM_LONG_NULL)
       kerror("delete %ld[%ld] error\n", t[i], (long) result);
   }
 

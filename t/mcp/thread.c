@@ -19,6 +19,9 @@
  * if the size of local stack slot is not great than sizeof(long),
  * the value of the slot will be stored at the slot, or I will be malloc
  * a new memory for storing the value.
+ *
+ * Actually, you should use pthread_key_create/pthread_setspecific/
+ * pthread_getspecific for thread local variables.
  */
 struct thread_s {
   pthread_t         pthread;

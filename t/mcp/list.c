@@ -43,13 +43,13 @@ list_new(kitem_op_t *op)
   if (l == NULL)
     return NULL;
 
-  l->dummy = _list_new_node(KITEM_NULL, NULL);
+  l->dummy = _list_new_node(op->null, NULL);
   if (l->dummy == NULL) {
     free(l);
     return NULL;
   }
 
-  l->head = _list_new_node(KITEM_NULL, l->dummy);
+  l->head = _list_new_node(op->null, l->dummy);
   if (l->head == NULL) {
     _list_destroy_node(l, l->dummy);
     free(l);

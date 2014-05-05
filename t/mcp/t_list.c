@@ -95,7 +95,7 @@ _routine_insert(void *arg)
 
   for (i = 0; i < insert_num; ++i) {
     t = random();
-    if (t == (long) KITEM_NULL)
+    if (t == (long) KITEM_LONG_NULL)
       continue;
 
     ret = list_insert(tl->l, thread, (kitem_t) t);
@@ -144,7 +144,7 @@ _routine_find(void *arg)
     t = random();
 
     result = list_find(tl->l, thread, (kitem_t) t);
-    if (result == KITEM_NULL)
+    if (result == KITEM_LONG_NULL)
       katomic_fetch_add(&g_notfound_cnt, 1);
     else
       katomic_fetch_add(&g_found_cnt, 1);
