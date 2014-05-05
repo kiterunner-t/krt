@@ -1,3 +1,6 @@
+/**
+ * Copyleft (C) KRT, 2013 by kiterunner_t
+ */
 
 #include <stdlib.h>
 #include "kmisc.h"

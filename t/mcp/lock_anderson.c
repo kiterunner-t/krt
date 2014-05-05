@@ -9,6 +9,10 @@
 #include "lock.h"
 #include "thread.h"
 
+#ifdef CACHELINE
+# include <malloc.h>
+#endif
+
 /* #define CACHELINE 64 sysconf(_SC_LEVEL1_DCACHE_LINESIZE) */
 
 typedef union {
@@ -21,9 +25,9 @@ typedef union {
 
 
 struct lock_s {
-  katomic_t   tail;
-  long        size;
-  cacheline_u flag[1];
+  katomic_t    tail;
+  long         size;
+  cacheline_u *flag;
 };
 
 
@@ -32,9 +36,20 @@ lock_new1(long size)
 {
   lock_t *l;
 
-  l = (lock_t *) malloc(sizeof(*l) + size * sizeof(cacheline_u));
+  l = (lock_t *) malloc(sizeof(*l));
   if (l == NULL)
     return NULL;
+
+#ifdef CACHELINE
+  l->flag = (cacheline_u *) memalign(CACHELINE, size * sizeof(cacheline_u));
+#else
+  l->flag = (cacheline_u *) malloc(size * sizeof(cacheline_u));
+#endif
+
+  if (l->flag == NULL) {
+    free(l);
+    return NULL;
+  }
 
   l->size = size;
   l->tail = 0;
@@ -47,6 +62,7 @@ void
 lock_destroy(lock_t *l)
 {
   assert(l != NULL);
+  free(l->flag);
   free(l);
 }
 
