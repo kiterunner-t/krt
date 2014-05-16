@@ -1,233 +1,347 @@
 # Copyleft (C) KRT, 2014 by kiterunner_t
 # ref: http://www.kiterunner.me/?p=427
 
-use warnings;
 use strict;
-use Getopt::Long;
+use warnings;
+
+use Cwd;
 use Encode;
+use File::Basename;
+use File::Find;
+use File::Spec;
+use File::stat;
+use File::Temp qw/tempfile/;
+use Getopt::Long;
 use Win32::OLE qw(in);
-# use Data::Dumper;
 
 
-sub gbk_to_utf8($);
+sub filter_file;
+sub dos_gbk_to_unix_utf8($$);
+sub word_to_md($$$);
 sub utf8_to_gbk($);
-sub is_shape($);
-sub is_table($);
-sub print_paragraph_text($);
+sub gbk_to_utf8($);
+sub in_range(\@$);
 sub chomp_text($);
+sub print_head($$$$);
+sub print_paragraph_text($$$\@$\@);
+sub usage();
 
 
 use constant {
-  PICTURE_CN => "图",
-  TABLE_CN   => "表格",
-};
+    LEFT_INDENT => 21,
+  };
 
 
 if ($^O ne "MSWin32") {
-  print "THE SCRIPT CAN BE RUNNING IN WINDOWS SYSTEM\n";
+  print "[ERROR] THE SCRIPT CAN BE RUNNING IN WINDOWS SYSTEM\n";
   exit 2;
 }
 
-my $debug;
-my $verbose;
-my $out_file;
-my $out_path = "";
-my $picture_format = "png";
 
-GetOptions(
-    "verbose|v+"         => \$verbose,
-    "debug|d+"           => \$debug,
-    "output|o=s"         => \$out_file,
-    "path|p=s"           => \$out_path,
-    "picture-format|f=s" => \$picture_format,
-);
+my %opts = (
+    "picture-format" => "png",
+    "picture-path"   => "images",
+    "word-path"      => ".",
+    "md-out-path"    => "../kiterunner.me/",
+  );
 
-die <<"_EOF_"
-Usage: perl word_to_md.pl [options] xx.docx
-    -d                 <debug option>
-    -o out-file.md
-    -p picture-path
-    -f picture-format
-_EOF_
-  unless @ARGV == 1;
+Getopt::Long::Configure("bundling");
+GetOptions(\%opts,
+    "help|h",
+    "verbose|v",
+    "force|f",
+    "picture-format=s",
+    "head-list-number!",
+    "gbk",
+    "picture-path=s",
+    "word-path=s",
+    "md-out-file|o=s",
+    "md-out-path=s",
+  ) or die usage;
 
-my $file = $ARGV[0];
-my $file_withpath = Win32::GetCwd() . "/$file" if $file !~ /^(\w:)?[\/\\]/;
-die "file $file does not exist" unless -f $file_withpath;
-
-my $fd;
-if ($out_file) {
-  open $fd, ">", $out_file or die "open file error: $!";
-} else {
-  $fd = *STDOUT;
-}
-
-my $word = Win32::OLE->GetActiveObject("Word.Application");
-unless (defined $word) {
-  $word = Win32::OLE->new('Word.Application', 'Quit') or die "Couldn't run Word";
-}
-
-my $close_word;
-my $doc;
-foreach my $d (in $word->Documents) {
-  if ($d->Name eq $file) {
-    $doc = $d;
-    last;
-  }
-}
-
-unless (defined $doc) {
-  $close_word = 1;
-  $doc = $word->Documents->Open($file_withpath);
+if (exists $opts{help}) {
+  usage;
+  exit 0;
 }
 
 my %styles = (
-  Title         => "标题",
-  Heading1      => "标题 1",
-  Heading2      => "标题 2",
-  Heading3      => "标题 3",
-  Caption       => "题注",
-  Emphasis      => "",
-  ListParagraph => "列出段落",
-  NormalObject  => "无间隔,program",
-  text          => "正文",
-);
+    Title         => "标题",
+    Heading1      => "标题 1",
+    Heading2      => "标题 2",
+    Heading3      => "标题 3",
+    Caption       => "题注",
+    Emphasis      => "",
+    ListParagraph => "列出段落",
+    NormalObject  => "无间隔,program",
+    text          => "正文",
+
+    picture       => "图",
+    table         => "表格",
+  );
 
 foreach my $k (keys %styles) {
   $styles{$k} = utf8_to_gbk $styles{$k};
 }
 
-my @links;
-foreach my $link (in $doc->Hyperlinks) {
-  my $l = {
-    start => $link->Range->Start,
-    end   => $link->Range->End,
-    text  => $link->Range->Text,
-    url   => $link->Address,
-  };
 
-  push @links, $l;
+my $word_app = Win32::OLE->GetActiveObject("Word.Application");
+unless (defined $word_app) {
+  $word_app = Win32::OLE->new("Word.Application", "Quit") or die "Couldn't run Word: $!";
+}
+
+my @files;
+
+
+sub filter_file {
+  my $name = $File::Find::name;
+  $name =~ s#^\./##;
+  push @files, $name if $name =~ m#\.docx$# && basename($name) !~ m/^~\$/;
 }
 
 
-my $last_end = 0;
-my $ref_num = 0;
-my $begin_indent = 0;
-my $last_indent = 0;
-my $indent;
-my @refs;
+if (@ARGV) {
+  push @files, @ARGV;
+} else {
+  find \&filter_file, ".";
+}
 
-my @urls;
+my $word_path = Cwd::realpath $opts{"word-path"};
+my $out_path = Cwd::realpath $opts{"md-out-path"};
 
-my $head1 = 0;
-my $head2 = 0;
-my $head3 = 0;
-
-my $program = 0;
-
-my $table_cn = utf8_to_gbk TABLE_CN;
-my $picture_cn = utf8_to_gbk PICTURE_CN;
-
-foreach my $paragraph (in $doc->Paragraphs) {
-  my $start = $paragraph->Range->start;
-  my $end = $paragraph->Range->end;
-
-  next if $start < $last_end;
-
-  if ($last_end = is_table($start)) {
-    next;
-  } elsif ($last_end = is_shape($start)) {
+foreach my $file (@files) {
+  my $file_withpath = File::Spec->catfile($word_path, $file);
+  if (! -f $file_withpath) {
+    print "    [WARNING] $file_withpath is not exist\n";
     next;
   }
 
-  my $style = $paragraph->Format->Style->NameLocal;
-  my $text = $paragraph->Range->Text;
-  my $left_indent = int($paragraph->Format->LeftIndent);
+  my $file_without_ext = (fileparse $file, "\.docx")[0];
+  my $file_md = $file_without_ext . ".md";
+  my $file_md_withpath = File::Spec->catfile($out_path, basename $file_md);
 
-  $text =~ s/[\r\n]*$/\n/;
-
-  if ($debug) {
-    print $fd "[debug] style --> " . $paragraph->Format->Style->Type;
-    print $fd "[$start -> $end]-----$style--->>>$text\n";
-  }
-
-  $program = 0 if $style ne $styles{NormalObject};
-  $last_indent = 0 if $style ne $styles{ListParagraph};
-
-  if ($style eq $styles{Title}) {
-    # ignore
-
-  } elsif ($style eq $styles{Heading1}) {
-    $head1++;
-    $head2 = 0;
-    $head3 = 0;
-    print $fd "# $head1 $text";
-
-  } elsif ($style eq $styles{Heading2}) {
-    $head2++;
-    $head3 = 0;
-    print $fd "## $head1.$head2 $text";
-
-  } elsif ($style eq $styles{Heading3}) {
-    $head3++;
-    print $fd "### $head1.$head2.$head3 $text";
-
-  } elsif ($style eq $styles{ListParagraph}) {
-    if ($last_indent == 0) {
-      print $fd "\n";
-      $begin_indent = $left_indent;
-    } elsif ($last_indent < $left_indent) {
-      print $fd "\n";
-    } elsif ($last_indent > $left_indent) {
-      print $fd "\n";
-    }
-
-    $indent = int(($left_indent - $begin_indent) / 28) * 4;
-    $last_indent = $left_indent;
-    print $fd " " x $indent . "* ";
-    print_paragraph_text $paragraph;
-
-  } elsif ($style eq $styles{NormalObject}) {
-    $program++;
-    print $fd "\n" if $program == 1;
-    print $fd "    ";
-    print_paragraph_text $paragraph;
-
-  } elsif ($style eq $styles{Emphasis}) {
-    print $fd "**";
-    print_paragraph_text $paragraph;
-    print $fd "**";
-
-  } elsif ($style eq $styles{Caption}) {
-    if ($text =~ /^\s*(?:$table_cn|$picture_cn)\s*\d+\s+(.*)$/) {
-      my $name = $1;
-      $name =~ s/[\r\n]//g;
-      $ref_num++;
-      push @refs, $name;
-      print $fd "\n![$name][$ref_num]\n";
-    }
+  if (exists $opts{force}) {
+    print "[FORCE-CONVERTING] $file_withpath\n";
 
   } else {
-    print_paragraph_text $paragraph;
+    if (-f $file_md_withpath) {
+      my $word_stat = stat $file_withpath or die "error: $!";
+      my $md_stat = stat $file_md_withpath or die "error: $!";
+
+      if ($word_stat->mtime > $md_stat->mtime) {
+        print "  [RECONVERTING] $file_withpath\n";
+      } else {
+        print "    [INFO] $file_withpath is older than $file_md_withpath, ";
+        print "use the --force option\n";
+        next;
+      }
+
+    } else {
+      print "[CONVERTING] $file_withpath\n";
+    }
   }
+
+  my $tmpfd = tempfile;
+  word_to_md $word_app, $file_withpath, $tmpfd;
+
+  if (! exists $opts{gbk} || $opts{gbk} == 0) {
+    dos_gbk_to_unix_utf8 $file_md_withpath, $tmpfd;
+  }
+
+  close $tmpfd;
 }
 
-my $num = 0;
-$out_path =~ s/\/*$/\// if ! $out_path eq "";
-print $fd "\n";
-foreach my $ref (@refs) {
-  $num++;
-  print $fd "[$num]: $out_path" . "$ref.$picture_format \"$ref\"\n";
+
+sub dos_gbk_to_unix_utf8($$) {
+  my ($out_file, $tmpfd) = @_;
+
+  open my $out_fd, "> :raw", $out_file or die "open $out_file error: $!";
+  my $enc = find_encoding("gbk");
+  my $enc_utf8 = find_encoding("utf-8");
+  seek $tmpfd, 0, 0;
+  while (<$tmpfd>) {
+    s/[\r\n]+$//;
+    print $out_fd $enc_utf8->encode($enc->decode($_)), "\n";
+  }
+  close $out_fd;
 }
 
-foreach my $url (@urls) {
-  $num++;
-  print $fd "[$num]: $url\n";
-}
 
-close $fd;
-if ($close_word) {
-  $doc->Close;
+sub word_to_md($$$) {
+  my ($word_app, $word_name_withpath, $tmpfd) = @_;
+
+  my $close_word;
+  my $doc;
+  my $filename = basename $word_name_withpath;
+  foreach my $d (in $word_app->Documents) {
+    if ($d->Name eq $filename) {
+      $doc = $d;
+      last;
+    }
+  }
+
+  unless (defined $doc) {
+    $close_word = 1;
+    $doc = $word_app->Documents->Open($word_name_withpath);
+  }
+
+  my @inline_shapes;
+  foreach my $shape (in $doc->InlineShapes) {
+    my $range = $shape->Range;
+    my $s = {
+        start => $range->Start,
+        end => $range->End,
+      };
+
+    push @inline_shapes, $s;
+  }
+
+  my @tables;
+  foreach my $table (in $doc->Tables) {
+    my $range = $table->Range;
+    my $t = {
+        start => $range->Start,
+        end => $range->End,
+      };
+
+    push @tables, $t;
+  }
+
+  my @links;
+  foreach my $link (in $doc->Hyperlinks) {
+    my $range = $link->Range;
+    my $l = {
+        start => $range->Start,
+        end => $range->End,
+        text => $range->Text,
+        url => $link->Address,
+      };
+
+    $l->{text} =~ s/[\r\n]+$//;
+    push @links, $l;
+  }
+
+  my $last_end = 0;
+  my $ref_num = 0;
+  my $begin_indent = 0;
+  my $last_indent = 0;
+  my $indent;
+  my @refs;
+
+  my @urls;
+
+  my $head1 = 0;
+  my $head2 = 0;
+  my $head3 = 0;
+
+  my $program = 0;
+
+  foreach my $paragraph (in $doc->Paragraphs) {
+    my $start = $paragraph->Range->start;
+    my $end = $paragraph->Range->end;
+
+    next if $start < $last_end;
+
+    if ($last_end = in_range(@tables, $start)) {
+      next;
+    } elsif ($last_end = in_range(@inline_shapes, $start)) {
+      next;
+    }
+
+    my $style = $paragraph->Format->Style->NameLocal;
+    my $text = $paragraph->Range->Text;
+    my $left_indent = int($paragraph->Format->LeftIndent);
+
+    $text =~ s/[\r\n]+$//;
+
+    if (exists $opts{verbose}) {
+      print "[debug] style --> " . $paragraph->Format->Style->Type;
+      print "[$start -> $end]-----$style--->>>($left_indent) $text\n";
+    }
+
+    if ($program > 0 && $style ne $styles{NormalObject}) {
+      $program = 0;
+      print $tmpfd "\n" if ! $text =~ m/\s*$/;
+    }
+
+    $last_indent = 0 if $style ne $styles{ListParagraph};
+
+    if ($style eq $styles{Title}) {
+      # ignore
+
+    } elsif ($style eq $styles{Heading1}) {
+      $head1++;
+      $head2 = 0;
+      $head3 = 0;
+      print_head $tmpfd, 1, $head1, $text;
+
+    } elsif ($style eq $styles{Heading2}) {
+      $head2++;
+      $head3 = 0;
+      print_head $tmpfd, 2, "$head1.$head2", $text;
+
+    } elsif ($style eq $styles{Heading3}) {
+      $head3++;
+      print_head $tmpfd, 3, "$head1.$head2.$head3", $text;
+
+    } elsif ($style eq $styles{ListParagraph}) {
+      if ($last_indent == 0) {
+        print $tmpfd "\n";
+        $begin_indent = $left_indent;
+      } elsif ($last_indent < $left_indent) {
+        print $tmpfd "\n";
+      } elsif ($last_indent > $left_indent) {
+        print $tmpfd "\n";
+      }
+
+      $indent = int(($left_indent - $begin_indent) / LEFT_INDENT) * 4;
+      $last_indent = $left_indent;
+      print $tmpfd " " x $indent . "* ";
+      $ref_num = print_paragraph_text $tmpfd, $doc, $paragraph, @links, $ref_num, @urls;
+
+    } elsif ($style eq $styles{NormalObject}) {
+      $program++;
+      print $tmpfd "\n" if $program == 1;
+      print $tmpfd "    ";
+      $ref_num = print_paragraph_text $tmpfd, $doc, $paragraph, @links, $ref_num, @urls;
+
+    } elsif ($style eq $styles{Emphasis}) {
+      print $tmpfd "**";
+      $ref_num = print_paragraph_text $tmpfd, $doc, $paragraph, @links, $ref_num, @urls;
+      print $tmpfd "**";
+
+    } elsif ($style eq $styles{Caption}) {
+      my $table = $styles{table};
+      my $picture = $styles{picture};
+      if ($text =~ /\s*(?:$table|$picture)\s*\d+\s+(.*)$/) {
+        my $name = $1;
+        $name =~ s/[\r\n]+//g;
+        $ref_num++;
+        push @refs, $name;
+        print $tmpfd "\n![$name][$ref_num]\n\n";
+      }
+
+    } else {
+      $ref_num = print_paragraph_text $tmpfd, $doc, $paragraph, @links, $ref_num, @urls;
+    }
+  }
+
+  my $num = 0;
+  
+  $opts{"picture-path"} =~ s/\/*$/\// if $opts{"picture-path"} ne "";
+  print $tmpfd "\n";
+  foreach my $ref (@refs) {
+    $num++;
+    print $tmpfd "[$num]: ", $opts{"picture-path"}, $ref, ".", $opts{"picture-format"}, "\"$ref\"\n";
+  }
+
+  foreach my $url (@urls) {
+    $num++;
+    print $tmpfd "[$num]: $url\n";
+  }
+
+  if ($close_word) {
+    $doc->Close;
+  }
 }
 
 
@@ -245,25 +359,12 @@ sub gbk_to_utf8($) {
 }
 
 
-sub is_table($) {
-  my ($start) = @_;
+sub in_range(\@$) {
+  my ($ranges, $start) = @_;
 
-  foreach my $table (in $doc->Tables) {
-    if ($table->range->start == $start) {
-      return $table->range->end;
-    }
-  }
-
-  0;
-}
-
-
-sub is_shape($) {
-  my ($start) = @_;
-
-  foreach my $shape (in $doc->InlineShapes) {
-    if ($shape->range->start == $start) {
-      return $shape->range->end;
+  foreach my $range (@$ranges) {
+    if ($range->{start} == $start) {
+      return $range->{start};
     }
   }
 
@@ -278,11 +379,23 @@ sub chomp_text($) {
 }
 
 
-sub print_paragraph_text($) {
-  my ($paragram) = @_;
+sub print_head($$$$) {
+  my ($fd, $count, $list_numbers, $text) = @_;
 
-  if ($debug) {
-    print $fd "[debug] 1 ", $paragram->Range->Start, " ", $paragram->Range->End, "\n";
+  print $fd "#";
+  print $fd "#" x $count;
+  if (exists $opts{"head-list-number"} && $opts{"head-list-number"} != 0) {
+    print $fd " " . $list_numbers;
+  }
+  print $fd " " . $text . "\n";
+}
+
+
+sub print_paragraph_text($$$\@$\@) {
+  my ($fd, $doc, $paragram, $links, $ref_num, $urls) = @_;
+
+  if (exists $opts{verbose}) {
+    print "[debug] 1 ", $paragram->Range->Start, " ", $paragram->Range->End, "\n";
   }
 
   # If Range is [n, n+1], the method Range->Start will be fail
@@ -293,16 +406,16 @@ sub print_paragraph_text($) {
 
   my $text_range = $paragram->Range;
  
-  foreach my $l (@links) {
+  foreach my $l (@$links) {
     if ($l->{start} >= $text_range->Start && $l->{start} <= $text_range->End) {
       my $pre_link = $doc->Range($text_range->Start, $l->{start});
 
-      if ($debug) {
-        print $fd "[debug] 00 ", $pre_link->Start, " ", $pre_link->End, "\n";
+      if (exists $opts{verbose}) {
+        print "[debug] 00 ", $pre_link->Start, " ", $pre_link->End, "\n";
       }
 
       $ref_num++;
-      push @urls, $l->{url};
+      push @$urls, $l->{url};
       print $fd chomp_text($pre_link->Text), "[", $l->{text}, "][$ref_num]";
       last if $l->{end} == $text_range->End;
       $text_range = $doc->Range($l->{end}, $text_range->End);
@@ -310,12 +423,45 @@ sub print_paragraph_text($) {
   }
 
   print $fd chomp_text($text_range->Text);
+  $ref_num;
 }
 
+
+sub usage() {
+  print <<"_EOF_";
+
+Usage:
+    perl word_to_md.pl [options] [xx.docx]
+
+options:
+    --help, -h
+    --verbose, -v
+    --force, -f         force the script to reproduce the markdown file
+    --picture-format    "png" is the default
+    --head-list-number  print head list number by default
+    --gbk               the encoding of the markdown is ms-dos/gbk
+                        the default is unix/utf-8
+    --picture-path      the default path is "images"
+    --word-path         the default word path is the current path
+    --md-out-file, -o   the mardown file name
+    --md-out-path
+
+_EOF_
+}
+
+
+# @TODO write the test examples and codes
+# @TODO move the repo to a stand alone project
 
 __END__
 
 # Change Log (MD)
+* 2014/05/16 refactor codes and add the following features
+
+    * implement converting word to markdown in batch mode, and recognize the markdown is  stable to the relative word file
+    * refactor some codes in converting the words to markdown
+    * add the option to allow converting the mardown file to UNIX/UTF-8 (default) or MS-DOS/GBK
+    * add the optoin to produce title number (default) or not
 
 * 2014/05/04 add the new features and fix bugs as follows
 
