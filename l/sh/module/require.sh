@@ -18,24 +18,24 @@ function _load_file() {
   local _src=
   local _is_found=
   for _file in "$@"; do
-	_is_found=false
-	_src=
+    _is_found=false
+    _src=
 
-	for _dir in "${_pathes[@]}"; do
-	  test -r "$_dir/$_file.bash" && _src="$_dir/$_file.bash"
-	  test -r "$_dir/$_file.sh" && _src="$_dir/$_file.sh"
+    for _dir in "${_pathes[@]}"; do
+      test -r "$_dir/$_file.bash" && _src="$_dir/$_file.bash"
+      test -r "$_dir/$_file.sh" && _src="$_dir/$_file.sh"
 
-	  if [ "$_src" != "" ]; then
-		source $_src
-		_is_found=true
-		break
-	  fi
-	done
+      if [ "$_src" != "" ]; then
+        source $_src
+        _is_found=true
+        break
+      fi
+    done
 
-	if [ "$_is_found" = "false" ]; then
-	  echo "not found file: $_file"
-	  return 1
-	fi
+    if [ "$_is_found" = "false" ]; then
+      echo "not found file: $_file"
+      return 1
+    fi
   done
 
   return 0
