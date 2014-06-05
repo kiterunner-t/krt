@@ -23,7 +23,7 @@ sub gbk_to_utf8($);
 sub in_range(\@$);
 sub chomp_text($);
 sub print_head($$$$);
-sub print_paragraph_text($$$\@$\@);
+sub print_paragraph_text($$$$\@\@);
 sub usage();
 
 
@@ -39,10 +39,11 @@ if ($^O ne "MSWin32") {
 
 
 my %opts = (
-    "picture-format" => "png",
-    "picture-path"   => "images",
-    "word-path"      => ".",
-    "md-out-path"    => "../kiterunner.me/",
+    "head-list-number"  => 1,
+    "picture-format"    => "png",
+    "picture-path"      => "images",
+    "word-path"         => ".",
+    "md-out-path"       => "../kiterunner.me/",
   );
 
 Getopt::Long::Configure("bundling");
@@ -220,8 +221,14 @@ sub word_to_md($$$) {
     push @links, $l;
   }
 
+  if (exists ${opts}{verbose}) {
+    foreach my $table (@tables) {
+      print "[debug] start: ", $table->{start}, ", end: ", $table->{end}, "\n";
+    }
+  }
+
   my $last_end = 0;
-  my $ref_num = 0;
+  my $ref_count = 0;
   my $begin_indent = 0;
   my $last_indent = 0;
   my $indent;
@@ -296,17 +303,17 @@ sub word_to_md($$$) {
       $indent = int(($left_indent - $begin_indent) / LEFT_INDENT) * 4;
       $last_indent = $left_indent;
       print $tmpfd " " x $indent . "* ";
-      $ref_num = print_paragraph_text $tmpfd, $doc, $paragraph, @links, $ref_num, @urls;
+      $ref_count = print_paragraph_text $tmpfd, $doc, $paragraph, $ref_count, @links, @urls;
 
     } elsif ($style eq $styles{NormalObject}) {
       $program++;
       print $tmpfd "\n" if $program == 1;
       print $tmpfd "    ";
-      $ref_num = print_paragraph_text $tmpfd, $doc, $paragraph, @links, $ref_num, @urls;
+      $ref_count = print_paragraph_text $tmpfd, $doc, $paragraph, $ref_count, @links, @urls;
 
     } elsif ($style eq $styles{Emphasis}) {
       print $tmpfd "**";
-      $ref_num = print_paragraph_text $tmpfd, $doc, $paragraph, @links, $ref_num, @urls;
+      $ref_count = print_paragraph_text $tmpfd, $doc, $paragraph, $ref_count, @links, @urls;
       print $tmpfd "**";
 
     } elsif ($style eq $styles{Caption}) {
@@ -315,13 +322,13 @@ sub word_to_md($$$) {
       if ($text =~ /\s*(?:$table|$picture)\s*\d+\s+(.*)$/) {
         my $name = $1;
         $name =~ s/[\r\n]+//g;
-        $ref_num++;
+        $ref_count++;
         push @refs, $name;
-        print $tmpfd "\n![$name][$ref_num]\n\n";
+        print $tmpfd "\n![$name][$ref_count]\n\n";
       }
 
     } else {
-      $ref_num = print_paragraph_text $tmpfd, $doc, $paragraph, @links, $ref_num, @urls;
+      $ref_count = print_paragraph_text $tmpfd, $doc, $paragraph, $ref_count, @links, @urls;
     }
   }
 
@@ -331,7 +338,7 @@ sub word_to_md($$$) {
   print $tmpfd "\n";
   foreach my $ref (@refs) {
     $num++;
-    print $tmpfd "[$num]: ", $opts{"picture-path"}, $ref, ".", $opts{"picture-format"}, "\"$ref\"\n";
+    print $tmpfd "[$num]: ", $opts{"picture-path"}, $ref, ".", $opts{"picture-format"}, " \"$ref\"\n";
   }
 
   foreach my $url (@urls) {
@@ -364,7 +371,7 @@ sub in_range(\@$) {
 
   foreach my $range (@$ranges) {
     if ($range->{start} == $start) {
-      return $range->{start};
+      return $range->{end};
     }
   }
 
@@ -391,8 +398,8 @@ sub print_head($$$$) {
 }
 
 
-sub print_paragraph_text($$$\@$\@) {
-  my ($fd, $doc, $paragram, $links, $ref_num, $urls) = @_;
+sub print_paragraph_text($$$$\@\@) {
+  my ($fd, $doc, $paragram, $refcount, $links, $urls) = @_;
 
   if (exists $opts{verbose}) {
     print "[debug] 1 ", $paragram->Range->Start, " ", $paragram->Range->End, "\n";
@@ -401,7 +408,7 @@ sub print_paragraph_text($$$\@$\@) {
   # If Range is [n, n+1], the method Range->Start will be fail
   if ($paragram->Range->End - $paragram->Range->Start == 1) {
     print $fd chomp_text($paragram->Range->Text);
-    return ;
+    return $refcount;
   }
 
   my $text_range = $paragram->Range;
@@ -414,16 +421,16 @@ sub print_paragraph_text($$$\@$\@) {
         print "[debug] 00 ", $pre_link->Start, " ", $pre_link->End, "\n";
       }
 
-      $ref_num++;
+      $refcount++;
       push @$urls, $l->{url};
-      print $fd chomp_text($pre_link->Text), "[", $l->{text}, "][$ref_num]";
+      print $fd chomp_text($pre_link->Text), "[", $l->{text}, "][$refcount]";
       last if $l->{end} == $text_range->End;
       $text_range = $doc->Range($l->{end}, $text_range->End);
     }
   }
 
   print $fd chomp_text($text_range->Text);
-  $ref_num;
+  $refcount;
 }
 
 
