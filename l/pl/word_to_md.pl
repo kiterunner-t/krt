@@ -323,7 +323,7 @@ sub word_to_md($$$) {
         my $name = $1;
         $name =~ s/[\r\n]+//g;
         $ref_count++;
-        push @refs, $name;
+        push @refs, [$ref_count, $name];
         print $tmpfd "\n![$name][$ref_count]\n\n";
       }
 
@@ -332,18 +332,14 @@ sub word_to_md($$$) {
     }
   }
 
-  my $num = 0;
-  
   $opts{"picture-path"} =~ s/\/*$/\// if $opts{"picture-path"} ne "";
   print $tmpfd "\n";
   foreach my $ref (@refs) {
-    $num++;
-    print $tmpfd "[$num]: ", $opts{"picture-path"}, $ref, ".", $opts{"picture-format"}, " \"$ref\"\n";
+    print $tmpfd "[", $ref->[0], "]: ", $opts{"picture-path"}, $ref->[1], ".", $opts{"picture-format"}, " \"", $ref->[1], "\"\n";
   }
 
   foreach my $url (@urls) {
-    $num++;
-    print $tmpfd "[$num]: $url\n";
+    print $tmpfd "[", $url->[0], "]: ", $url->[1], "\n";
   }
 
   if ($close_word) {
@@ -422,7 +418,7 @@ sub print_paragraph_text($$$$\@\@) {
       }
 
       $refcount++;
-      push @$urls, $l->{url};
+      push @$urls, [$refcount, $l->{url}];
       print $fd chomp_text($pre_link->Text), "[", $l->{text}, "][$refcount]";
       last if $l->{end} == $text_range->End;
       $text_range = $doc->Range($l->{end}, $text_range->End);
