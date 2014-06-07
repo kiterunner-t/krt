@@ -15,16 +15,16 @@ void test_time(char *title, struct timeval *start, struct timeval *end);
 int
 main(int argc, char **argv)
 {
-  int is_fsync = 0;
-  int is_unlink = 0;
-  int num = 10000;
-  struct timeval start;
-  struct timeval end;
-  char *file = "test.txt";
-  int fd;
-  char buf[4096] = "hello krt\n";
-  int i;
-  ssize_t n;
+  int             is_fsync = 0;
+  int             is_unlink = 0;
+  int             num = 10000;
+  struct timeval  start;
+  struct timeval  end;
+  char           *file = "test.txt";
+  int             fd;
+  char            buf[4096] = "hello krt\n";
+  int             i;
+  ssize_t         n;
 
   switch (argc) {
   case 4: is_unlink = atoi(argv[3]);
@@ -42,8 +42,14 @@ main(int argc, char **argv)
     exit(-1);
   }
 
-  if (is_unlink)
+  if (is_unlink) {
     unlink(file);
+    printf("    unlink\n");
+  }
+  if (is_fsync) {
+    printf("    fsync\n");
+  }
+  printf("\n");
 
   gettimeofday(&start, NULL);
   for (i = 0; i < num; ++i) {
@@ -63,6 +69,11 @@ main(int argc, char **argv)
     gettimeofday(&end, NULL);
     test_time("fsync", &start, &end);
   }
+
+  gettimeofday(&start, NULL);
+  rename(file, "test_another.txt");
+  gettimeofday(&end, NULL);
+  test_time("rename", &start, &end);
 
   gettimeofday(&start, NULL);
   close(fd);
@@ -85,37 +96,58 @@ test_time(char *title, struct timeval *start, struct timeval *end)
   printf("%ld  %ld\n\n", end->tv_sec - start->tv_sec, end->tv_usec - start->tv_usec);
 }
 
-
 /*
-krt@krt:~$ ./a.out 1000000 1 1
+
+krt@krt:~/work/github/krt/t/linux/src/io$ ./a.out 1000000 1
+    fsync
+
 ----------------write
-start: 1402112558  791409
-end: 1402112563  38156
-4  246747
+start: 1402147737  817798
+end: 1402147743  76873
+5  259075
 
 ----------------fsync
-start: 1402112563  38416
-end: 1402112563  994657
-0  956241
+start: 1402147743  77026
+end: 1402147743  635889
+0  558863
+
+----------------rename
+start: 1402147743  636036
+end: 1402147743  642558
+0  6522
 
 ----------------close
-start: 1402112563  994825
-end: 1402112564  2224
-0  7399
+start: 1402147743  642645
+end: 1402147743  642677
+0  32
 
 */
 
 /*
-krt@krt:~$ ./a.out 1000000 0 1
+
+krt@krt:~/work/github/krt/t/linux/src/io$ ./a.out 1000000 1 1
+    unlink
+    fsync
+
 ----------------write
-start: 1402112575  652316
-end: 1402112581  126372
-5  474056
+start: 1402147768  448894
+end: 1402147774  907808
+6  458914
+
+----------------fsync
+start: 1402147774  908141
+end: 1402147774  981000
+0  72859
+
+----------------rename
+start: 1402147774  986021
+end: 1402147774  986080
+0  59
 
 ----------------close
-start: 1402112581  126783
-end: 1402112581  876041
-0  749258
+start: 1402147774  986122
+end: 1402147774  991844
+0  5722
 
 */
 
