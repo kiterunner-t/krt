@@ -1,5 +1,5 @@
 /**
- * Copyleft (C) KRT, 2013 by kiterunner_t
+ * Copyleft (C) KRT, 2013-2014 by kiterunner_t
  */
 
 #include <stdio.h>
@@ -10,37 +10,49 @@
 
 
 typedef struct pipeline_stage_s pipeline_stage_t;
+typedef struct pipeline_msg_s   pipeline_msg_t;
 
 
 struct pipeline_s {
   pipeline_stage_t *head;
   pipeline_stage_t *tail;
   int               stages;
+
   pthread_mutex_t   mutex;
   pthread_cond_t    finished;
   int               active;
 };
 
 
+struct pipeline_msg_s {
+  int   exit;
+  void *data;
+};
+
+
 struct pipeline_stage_s {
   pthread_t         thread;
   int               index;
+
   pthread_mutex_t   mutex;
   pthread_cond_t    avail;
   pthread_cond_t    ready;
   int               data_ready;
-  void             *data;
+  pipeline_msg_t    msg;
+
   pipeline_stage_t *next;
+
+  pipeline_stage_process_pf  proc;
 };
 
 
 static void *_pipeline_stage_tail(void *);
 static void *_pipeline_stage(void *);
-static int   _pipeline_send(pipeline_stage_t *stage, void *data);
+static int   _pipeline_send(pipeline_stage_t *stage, void *data, int exit);
 
 
 pipeline_t *
-pipeline_create(int stages)
+pipeline_create(int stages, pipeline_stage_process_pf *processes)
 {
   pipeline_t       *pl;
   pipeline_stage_t *stage;
@@ -87,18 +99,22 @@ pipeline_create(int stages)
       break;
     }
 
+    stage->msg.data = NULL;
+    stage->msg.exit = 0;
     stage->data_ready = 0;
     stage->index = i;
     pl->head = stage;
     pl->stages++;
 
     if (i == stages) {
+      stage->proc = processes[stages-1];
       pl->tail = stage;
       stage->next = NULL;
       res = pthread_create(&stage->thread, NULL,
                            _pipeline_stage_tail, (void *) pl);
 
     } else {
+      stage->proc = processes[i-1];
       stage->next = stage + 1;
       res = pthread_create(&stage->thread, NULL,
                            _pipeline_stage, (void *) stage);
@@ -157,14 +173,23 @@ pipeline_start(pipeline_t *pl, void *data)
   if (pthread_mutex_unlock(&pl->mutex) != 0)
     return KERROR;
 
-  return _pipeline_send(pl->head, data);
+  return _pipeline_send(pl->head, data, 0);
 }
 
 
 kerrno_t
-pipeline_wait(pipeline_t *pl)
+pipeline_wait(pipeline_t *pl, int destroy)
 {
   kerrno_t res;
+
+  /* force invoking all stages, and then exit */
+  if (destroy == 1) {
+    pthread_mutex_lock(&pl->mutex);
+    pl->active++;
+    pthread_mutex_unlock(&pl->mutex);
+
+    _pipeline_send(pl->head, NULL, 1);
+  }
 
   if (pthread_mutex_lock(&pl->mutex) != 0)
     return KERROR;
@@ -187,36 +212,44 @@ _pipeline_stage_tail(void *arg)
 {
   pipeline_t       *pl = (pipeline_t *) arg;
   pipeline_stage_t *stage = pl->tail;
-  int               res;
-  kerrno_t          ret;
 
   if (pthread_mutex_lock(&stage->mutex) != 0)
     kerror("state_tail lock error");
 
   while (KTRUE) {
-    while (!stage->data_ready) {
+    while (stage->data_ready == 0) {
       if (pthread_cond_wait(&stage->avail, &stage->mutex)) {
         pthread_mutex_unlock(&stage->mutex);
         kerror("stage_tail cond wait error");
       }
     }
 
-    res = (int) (long) stage->data;
-    res += stage->index;
-    printf("    result: %d\n", res);
-    fflush(stdout);
-
-    ret = pthread_mutex_lock(&pl->mutex);
-    stage->data_ready = 0;
-    if (!(--pl->active)) {
-      ret += pthread_cond_signal(&pl->finished);
+    if (stage->msg.exit == 1) {
+      pthread_mutex_unlock(&stage->mutex);
+      break;
     }
-    ret += pthread_mutex_unlock(&pl->mutex);
+
+    if (stage->proc(stage->index, &stage->msg.data) != KSUCCESS)
+      kinfo("stage proc error");
+
+    pthread_mutex_unlock(&stage->mutex);
+    pthread_mutex_lock(&pl->mutex);
+    if ((--pl->active) == 0) {
+      pthread_cond_signal(&pl->finished);
+    }
+    pthread_mutex_unlock(&pl->mutex);
+
+    pthread_mutex_lock(&stage->mutex);
+    stage->data_ready = 0;
+    pthread_cond_signal(&stage->ready);
   }
 
-  ret += pthread_mutex_unlock(&stage->mutex); // this is not nesscessary
-  if (ret != 0)
-    kerror("stage_tail unlock error");
+  pthread_mutex_lock(&pl->mutex);
+  kinfo("the stage[thread-%d] exit", stage->index);
+  --pl->active;
+  pthread_cond_signal(&pl->finished);
+  pthread_mutex_unlock(&pl->mutex);
+  return (void *) KSUCCESS;
 }
 
 
@@ -224,31 +257,54 @@ static void *
 _pipeline_stage(void *arg)
 {
   pipeline_stage_t *stage = (pipeline_stage_t *) arg;
+  kerrno_t          ret = KSUCCESS;
 
-  if (pthread_mutex_lock(&stage->mutex))
-    kerror("pipeline stage lock mutex error");
-
-  while (KTRUE) {
-    while (!stage->data_ready) {
-      if (pthread_cond_wait(&stage->avail, &stage->mutex))
-        kerror("pipeline stage wait avail cond error");
-    }
-
-    stage->data = ((int) stage->data) + stage->index;
-    _pipeline_send(stage->next, stage->data);
-
-    stage->data_ready = 0;
-    if (pthread_cond_signal(&stage->ready))
-      kerror("pipeline stage signal ready error");
+  if (pthread_mutex_lock(&stage->mutex)) {
+    kinfo("pipeline stage lock mutex error");
+    return (void *) KERROR;
   }
 
+  while (KTRUE) {
+    while (stage->data_ready == 0) {
+      if (pthread_cond_wait(&stage->avail, &stage->mutex)) {
+        kinfo("pipeline stage wait avail cond error");
+        ret = KERROR;
+        goto DONE;
+      }
+    }
+
+    /* force invoking the next stage */
+    if (stage->msg.exit == 1) {
+      pthread_mutex_unlock(&stage->mutex);
+      kinfo("stage[thread-%d] exited", stage->index);
+      _pipeline_send(stage->next, NULL, 1);
+      break;
+    }
+
+    if (stage->proc(stage->index, &stage->msg.data) != KSUCCESS)
+      kinfo("stage proc error");
+
+    pthread_mutex_unlock(&stage->mutex);
+    _pipeline_send(stage->next, stage->msg.data, 0);
+    pthread_mutex_lock(&stage->mutex);
+
+    stage->data_ready = 0;
+    if (pthread_cond_signal(&stage->ready)) {
+      kinfo("pipeline stage signal ready error");
+      ret = KERROR;
+      break;
+    }
+  }
+
+DONE:
   if (pthread_mutex_unlock(&stage->mutex))
-    kerror("pipeline stage unlock mutex error");
+    kinfo("pipeline stage unlock mutex error");
+  return (void *) (long) ret;
 }
 
 
 static kerrno_t
-_pipeline_send(pipeline_stage_t *stage, void *data)
+_pipeline_send(pipeline_stage_t *stage, void *data, int exit)
 {
   if (pthread_mutex_lock(&stage->mutex) != 0)
     return KERROR;
@@ -260,7 +316,8 @@ _pipeline_send(pipeline_stage_t *stage, void *data)
     }
   }
 
-  stage->data = data;
+  stage->msg.data = data;
+  stage->msg.exit = exit;
   stage->data_ready = 1;
   if (pthread_cond_signal(&stage->avail) != 0) {
     pthread_mutex_unlock(&stage->mutex);
