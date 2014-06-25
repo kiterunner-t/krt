@@ -223,7 +223,11 @@ sub word_to_md($$$) {
 
   if (exists ${opts}{verbose}) {
     foreach my $table (@tables) {
-      print "[debug] start: ", $table->{start}, ", end: ", $table->{end}, "\n";
+      print "[debug] table start: ", $table->{start}, ", end: ", $table->{end}, "\n";
+    }
+
+    foreach my $link (@links) {
+      print "[debug] link start: ", $link->{start}, ", end: ", $link->{end}, " ", $link->{text}, "\n";
     }
   }
 
@@ -308,8 +312,8 @@ sub word_to_md($$$) {
     } elsif ($style eq $styles{NormalObject}) {
       $program++;
       print $tmpfd "\n" if $program == 1;
-      print $tmpfd "    ";
-      $ref_count = print_paragraph_text $tmpfd, $doc, $paragraph, $ref_count, @links, @urls;
+      print $tmpfd "    $text";
+      # $ref_count = print_paragraph_text $tmpfd, $doc, $paragraph, $ref_count, @links, @urls;
 
     } elsif ($style eq $styles{Emphasis}) {
       print $tmpfd "**";
@@ -378,6 +382,7 @@ sub in_range(\@$) {
 sub chomp_text($) {
   my ($text) = @_;
   $text =~ s/[\r\n]+$/\n/;
+  $text =~ s/</\\</g;
   $text;
 }
 
@@ -410,7 +415,7 @@ sub print_paragraph_text($$$$\@\@) {
   my $text_range = $paragram->Range;
  
   foreach my $l (@$links) {
-    if ($l->{start} >= $text_range->Start && $l->{start} <= $text_range->End) {
+    if ($l->{start} >= $text_range->Start && $l->{start} < $text_range->End) {
       my $pre_link = $doc->Range($text_range->Start, $l->{start});
 
       if (exists $opts{verbose}) {
