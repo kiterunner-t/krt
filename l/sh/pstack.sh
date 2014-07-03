@@ -1,5 +1,5 @@
-#!/bin/bash
-# This script is based to http://poormansprofiler.org/
+#! /bin/bash
+# This script is based on http://poormansprofiler.org/
 
 
 print_stack() {
@@ -11,15 +11,16 @@ print_stack() {
     echo
     echo $_pid
     echo -------------
-    gdb -ex "$_sym" -ex "set pagination 0" -ex "thread apply all bt" -batch -p $_pid | awk \
-        'BEGIN { s = ""; } 
-          /Thread/ { print s; s = ""; } 
-          /^\#/ { if ($3 != "in") { $4 = $2 } }
-          /^\#/ { if (s != "" ) { s = s "," $4} else { s = $4 } } 
-          END { print s }' | \
-      sort | uniq -c | perl -e 'while (<>) { print if ! /^\s*\d+\s*$/; }' | \
-        sort -r -n -k 1,1
-  done 
+    gdb -ex "$_sym" -ex "set pagination 0" -ex "thread apply all bt" -batch -p $_pid | \
+      awk 'BEGIN { s = ""; } 
+            /Thread/ { print s; s = ""; } 
+            /^\#/ { if ($3 != "in") { $4 = $2 } }
+            /^\#/ { if (s != "" ) { s = s "," $4} else { s = $4 } } 
+            END { print s }' | \
+        sort | uniq -c | \
+          perl -e 'while (<>) { print if ! /^\s*\d+\s*$/; }' | \
+            sort -r -n -k 1,1
+  done
 }
 
 
