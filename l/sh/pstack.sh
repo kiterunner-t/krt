@@ -12,10 +12,10 @@ print_stack() {
     echo $_pid
     echo -------------
     gdb -ex "$_sym" -ex "set pagination 0" -ex "thread apply all bt" -batch -p $_pid | \
-      awk 'BEGIN { s = ""; } 
-            /Thread/ { print s; s = ""; } 
+      awk 'BEGIN { s = ""; }
+            /Thread/ { print s; s = ""; }
             /^\#/ { if ($3 != "in") { $4 = $2 } }
-            /^\#/ { if (s != "" ) { s = s "," $4} else { s = $4 } } 
+            /^\#/ { if (s != "" ) { s = s "," $4} else { s = $4 } }
             END { print s }' | \
         sort | uniq -c | \
           perl -e 'while (<>) { print if ! /^\s*\d+\s*$/; }' | \
@@ -26,7 +26,7 @@ print_stack() {
 
 nsamples=1
 sleeptime=0
-pid=$(pidof $redis-server)
+pid=$(pidof $1)
 _SYMFILE=$2
 
 for x in $(seq 1 $nsamples); do
