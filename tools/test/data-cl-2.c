@@ -6,5 +6,6 @@ int a; /* this is a test
  */ int c;
 
 int b; /* this is a special comment
+          another comment
           for cl.pl */ int d;
 
