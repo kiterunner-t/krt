@@ -1,58 +1,67 @@
-VPATH     = src include ../../lib/src ../../lib/include
+VPATH     = src t include ../../lib/src ../../lib/include
 BINDIR    = bin
-
+MKDIR     = bin/mk
+OBJSDIR   = objs
 CC        = gcc
-CC_FLAGS  = -Wall -g -L ../../lib
-CPP_FLAGS = -I ../../lib/include -I include
+LD        = ld
+CCFLAGS   = -Wall -g
+CPPFLAGS  = -I ../../lib/include -I include
+LDFLAGS   = -L ../../lib
+LDLIBS    = -lk
 
-
-ALL_OBJS  = test_redblack_tree \
+ALL_BINS  = test_redblack_tree \
             test_skip_list_deterministic \
-            test_splay_tree \
+            test_splay_tree_topdown \
             test_aa_tree \
-            test_treap_tree \
             test_avl_tree \
-            test_st_bst \
             test_kd_tree \
             test_binary_heap
+                        #test_treap_tree \            test_st_bst \
 
-ITEM_SRC = kitem_long.c kitem_string.c kitem.h kitem_long.h kitem_string.h \
-           kmisc.h
-
-
-% :
-	$(CC) $(CC_FLAGS) $(CPP_FLAGS) -o $(BINDIR)/$@ $(filter %.c,$^) -lk
-
-
-all: $(ALL_OBJS) TAGS
-	@echo ""
+vpath %.c t
+vpath %.c src
+vpath %.o $(OBJSDIR)
+vpath %.o $(OBJSDIR)/t
+vpath %.o $(OBJSDIR)/src
 
 
-TAGS: src/*.[ch] include/*.h ../../lib/src/*.[ch] ../../lib/include/*.h
+define make_depend
+	$(CC) -MM $(CPPFLAGS) $1 >$(MKDIR)/$2.mk__
+	-@perl mk_convert.pl $(MKDIR)/$2.mk__
+	-@rm -f $(MKDIR)/$2.mk__
+endef
+
+
+define make_rule
+  $1: objs/t/$1.o objs/src/$(subst test_,,$1).o objs/src/kitem_long.o objs/src/kitem_string.o
+	$(CC) $(LDFLAGS) $(LDLIBS) -o $(BINDIR)/$$@ $$^
+
+  objs/%.o: %.c
+	$(CC) $(CCFLAGS) $(CPPFLAGS) -o $$@ -c $$(filter %.c,$$^)
+
+  $(MKDIR)/$1.mk: t/$1.c src/$(subst test_,,$1).c src/kitem_long.c src/kitem_string.c
+	$(call make_depend,$$^,$1)
+
+  -include $(MKDIR)/$1.mk
+endef
+
+
+all: $(ALL_BINS) TAGS
+
+
+TAGS: src/*.[ch] t/*.[ch] include/*.h ../../lib/src/*.[ch] ../../lib/include/*.h
 	@rm -f $@
 	find . ../../lib -name "*.[ch]" | xargs etags -R -a
 
 
-test_redblack_tree: test_redblack_tree.c redblack_tree.c $(ITEM_SRC)
-
-test_skip_list_deterministic: test_skip_list_deterministic.c \
-    skip_list_deterministic.c  $(ITEM_SRC)
-
-test_splay_tree: test_splay_tree.c splay_tree_topdown.c  $(ITEM_SRC)
-
-test_aa_tree: test_aa_tree.c aa_tree.c  $(ITEM_SRC)
-
-test_treap_tree: test_treap_tree.c treap_tree.c  $(ITEM_SRC)
-
-test_avl_tree: test_avl_tree.c avl_tree.c  $(ITEM_SRC)
-
-test_st_bst: test_st.c st_bst.c st.h st_bst.h stack_array.c stack.h $(ITEM_SRC)
-
-test_kd_tree: test_kd_tree.c kd_tree.c kd_tree.h $(ITEM_SRC)
-
-test_binary_heap: test_binary_heap.c binary_heap.c binary_heap.h $(ITEM_SRC)
-
-
 clean:
-	-rm -f *.o $(addprefix $(BINDIR)/, $(ALL_OBJS))
+	-rm -f $(addprefix $(BINDIR)/,$(ALL_BINS)) $(addprefix $(BINDIR)/mk/,$(addsuffix .mk,$(ALL_BINS)))
+	-find . -name *.o | xargs rm -f
+
+
+$(if $(filter $(MAKECMDGOALS),clean TAGS all),,$(eval $(call make_rule,$(MAKECMDGOALS))))
+
+ifeq "$(MAKECMDGOALS)" "all"
+  $(foreach obj,$(ALL_BINS),$(eval $(call make_rule,$(obj))))
+endif
 

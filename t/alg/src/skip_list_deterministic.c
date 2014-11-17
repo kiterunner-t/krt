@@ -146,7 +146,7 @@ dskip_list_insert(dskip_list_t *dsl, kitem_t item)
 {
   dskip_list_node_t *current;
   dskip_list_node_t *t;
-  kitem_cmp_pt        cmp = dsl->op->cmp;
+  kitem_cmp_pt       cmp = dsl->op->cmp;
 
   current = dsl->head;
   dsl->bottom->item = item;
@@ -155,7 +155,7 @@ dskip_list_insert(dskip_list_t *dsl, kitem_t item)
     while (cmp(item, current->item) > 0)
       current = current->right;
 
-    if (current->down==dsl->bottom && cmp(item, current->item)==0) 
+    if (current->down==dsl->bottom && cmp(item, current->item)==0)
       return 1;
 
     if (cmp(current->item, current->down->right->right->item) > 0) {

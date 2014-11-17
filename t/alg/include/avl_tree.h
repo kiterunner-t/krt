@@ -6,6 +6,7 @@
 #define AVL_TREE_H_
 
 #include "kitem.h"
+#include "kmisc.h"
 
 
 typedef struct avl_tree_s avl_tree_t;
