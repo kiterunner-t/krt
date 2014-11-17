@@ -15,8 +15,9 @@ ALL_BINS  = test_redblack_tree \
             test_aa_tree \
             test_avl_tree \
             test_kd_tree \
-            test_binary_heap
-                        #test_treap_tree \            test_st_bst \
+            test_binary_heap \
+            test_treap_tree \
+            test_st_bst
 
 vpath %.c t
 vpath %.c src
@@ -33,13 +34,13 @@ endef
 
 
 define make_rule
-  $1: objs/t/$1.o objs/src/$(subst test_,,$1).o objs/src/kitem_long.o objs/src/kitem_string.o
-	$(CC) $(LDFLAGS) $(LDLIBS) -o $(BINDIR)/$$@ $$^
+  $1: objs/t/$1.o objs/src/$(subst test_,,$1).o objs/src/kitem_long.o objs/src/kitem_string.o objs/src/stack_array.o
+	$(CC) $(LDFLAGS) -o $(BINDIR)/$$@ $$^ $(LDLIBS)
 
   objs/%.o: %.c
 	$(CC) $(CCFLAGS) $(CPPFLAGS) -o $$@ -c $$(filter %.c,$$^)
 
-  $(MKDIR)/$1.mk: t/$1.c src/$(subst test_,,$1).c src/kitem_long.c src/kitem_string.c
+  $(MKDIR)/$1.mk: t/$1.c src/$(subst test_,,$1).c src/kitem_long.c src/kitem_string.c src/stack_array.c
 	$(call make_depend,$$^,$1)
 
   -include $(MKDIR)/$1.mk
